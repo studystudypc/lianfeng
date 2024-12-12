@@ -7,4 +7,7 @@ import java.io.Serializable;
  * @Date  2024-12-12 14:38
  */
 public class qwe implements Serializable {
+    public static void main(String[] args) {
+        System.out.println("shab ");
+    }
 }
