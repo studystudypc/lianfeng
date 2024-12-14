@@ -1,0 +1,19 @@
+Index: pom.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\r\n         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\">\r\n    <modelVersion>4.0.0</modelVersion>\r\n\r\n    <groupId>com.lianfeng</groupId>\r\n    <artifactId>lianfeng</artifactId>\r\n    <version>1.0-SNAPSHOT</version>\r\n    <packaging>pom</packaging>\r\n    <modules>\r\n        <module>common</module>\r\n        <module>model</module>\r\n        <module>web</module>\r\n    </modules>\r\n\r\n    <name>lianfeng</name>\r\n\r\n    <parent>\r\n        <groupId>org.springframework.boot</groupId>\r\n        <artifactId>spring-boot-starter-parent</artifactId>\r\n        <version>3.0.5</version>\r\n    </parent>\r\n\r\n    <!-- 这里可以直接替换pom文件中原有的properties -->\r\n    <properties>\r\n        <maven.compiler.source>1.8</maven.compiler.source>\r\n        <maven.compiler.target>1.8</maven.compiler.target>\r\n        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>\r\n        <mybatis-plus.version>3.5.3.1</mybatis-plus.version>\r\n        <swagger.version>2.9.2</swagger.version>\r\n        <knife4j.version>4.1.0</knife4j.version>\r\n    </properties>\r\n\r\n    <!--配置dependencyManagement统一管理依赖版本-->\r\n    <dependencyManagement>\r\n        <dependencies>\r\n            <!--mybatis-plus-->\r\n            <!--官方文档：https://baomidou.com/pages/bab2db/ -->\r\n            <dependency>\r\n                <groupId>com.baomidou</groupId>\r\n                <artifactId>mybatis-plus-boot-starter</artifactId>\r\n                <version>${mybatis-plus.version}</version>\r\n            </dependency>\r\n\r\n            <!--knife4j文档-->\r\n            <!--官方文档：https://doc.xiaominfo.com/docs/quick-start -->\r\n            <dependency>\r\n                <groupId>com.github.xiaoymin</groupId>\r\n                <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>\r\n                <version>${knife4j.version}</version>\r\n            </dependency>\r\n        </dependencies>\r\n    </dependencyManagement>\r\n\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/pom.xml b/pom.xml
+--- a/pom.xml	(revision 8597a1e55fef28ade060cdd7a31f974b843c6c24)
++++ b/pom.xml	(date 1734006627891)
+@@ -19,7 +19,7 @@
+     <parent>
+         <groupId>org.springframework.boot</groupId>
+         <artifactId>spring-boot-starter-parent</artifactId>
+-        <version>3.0.5</version>
++        <version>2.3.7.RELEASE</version>
+     </parent>
+ 
+     <!-- 这里可以直接替换pom文件中原有的properties -->

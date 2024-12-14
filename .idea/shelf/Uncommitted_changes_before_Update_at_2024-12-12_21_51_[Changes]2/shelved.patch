@@ -1,0 +1,10 @@
+Index: model/target/maven-archiver/pom.properties
+===================================================================
+diff --git a/model/target/maven-archiver/pom.properties b/model/target/maven-archiver/pom.properties
+deleted file mode 100644
+--- a/model/target/maven-archiver/pom.properties	
++++ /dev/null	
+@@ -1,3 +0,0 @@
+-artifactId=model
+-groupId=com.lianfeng
+-version=1.0-SNAPSHOT

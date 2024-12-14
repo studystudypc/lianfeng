@@ -1,0 +1,109 @@
+<changelist name="Uncommitted_changes_before_Update_at_2024-12-13_22_27_[Changes]" date="1734100076209" recycled="false" toDelete="true">
+  <option name="PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2024-12-13_22_27_[Changes]/shelved.patch" />
+  <option name="DESCRIPTION" value="Uncommitted changes before Update at 2024-12-13 22:27 [Changes]" />
+  <binary>
+    <option name="BEFORE_PATH" value="web/target/classes/com/lianfeng/web/lianfengWebApplication.class" />
+    <option name="AFTER_PATH" value="web/target/classes/com/lianfeng/web/lianfengWebApplication.class" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2024-12-13_22_27_[Changes]/lianfengWebApplication.class" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst" />
+    <option name="AFTER_PATH" />
+    <option name="SHELVED_PATH" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="web/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst" />
+    <option name="AFTER_PATH" />
+    <option name="SHELVED_PATH" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="web/target/classes/com/lianfeng/web/service/AccountService.class" />
+    <option name="AFTER_PATH" />
+    <option name="SHELVED_PATH" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="web/target/classes/com/lianfeng/web/service/impl/DictServiceImpl.class" />
+    <option name="AFTER_PATH" value="web/target/classes/com/lianfeng/web/service/impl/DictServiceImpl.class" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2024-12-13_22_27_[Changes]/DictServiceImpl.class" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="web/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" />
+    <option name="AFTER_PATH" />
+    <option name="SHELVED_PATH" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="web/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" />
+    <option name="AFTER_PATH" />
+    <option name="SHELVED_PATH" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="web/target/classes/com/lianfeng/web/service/impl/AccountServiceImpl.class" />
+    <option name="AFTER_PATH" value="web/target/classes/com/lianfeng/web/service/impl/AccountServiceImpl.class" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2024-12-13_22_27_[Changes]/AccountServiceImpl.class" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="model/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst" />
+    <option name="AFTER_PATH" />
+    <option name="SHELVED_PATH" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="web/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst" />
+    <option name="AFTER_PATH" />
+    <option name="SHELVED_PATH" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="web/target/classes/com/lianfeng/web/service/DictService.class" />
+    <option name="AFTER_PATH" />
+    <option name="SHELVED_PATH" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="common/target/common-1.0-SNAPSHOT.jar" />
+    <option name="AFTER_PATH" />
+    <option name="SHELVED_PATH" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="common/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" />
+    <option name="AFTER_PATH" />
+    <option name="SHELVED_PATH" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="common/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst" />
+    <option name="AFTER_PATH" />
+    <option name="SHELVED_PATH" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="model/target/model-1.0-SNAPSHOT.jar" />
+    <option name="AFTER_PATH" />
+    <option name="SHELVED_PATH" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="model/target/classes/com/lianfeng/model/entity/Account.class" />
+    <option name="AFTER_PATH" value="model/target/classes/com/lianfeng/model/entity/Account.class" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2024-12-13_22_27_[Changes]/Account.class" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="common/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" />
+    <option name="AFTER_PATH" />
+    <option name="SHELVED_PATH" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="model/target/classes/com/lianfeng/model/entity/Dict.class" />
+    <option name="AFTER_PATH" value="model/target/classes/com/lianfeng/model/entity/Dict.class" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2024-12-13_22_27_[Changes]/Dict.class" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="model/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" />
+    <option name="AFTER_PATH" />
+    <option name="SHELVED_PATH" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="web/target/web-1.0-SNAPSHOT.jar.original" />
+    <option name="AFTER_PATH" />
+    <option name="SHELVED_PATH" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="web/target/web-1.0-SNAPSHOT.jar" />
+    <option name="AFTER_PATH" />
+    <option name="SHELVED_PATH" />
+  </binary>
+</changelist>
