@@ -1,4 +1,4 @@
-package com.lianfeng.web;
+package com.lianfeng;
 
 import com.lianfeng.common.constants.LFanConstants;
 import org.mybatis.spring.annotation.MapperScan;
@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @ServletComponentScan(basePackages = LFanConstants.BASE_COMPONENT_SCAN_PATH)
 @EnableCaching//缓存注解
 @EnableAsync//异步注解
-@MapperScan("com.lianfeng.web.mapper")
+@MapperScan("com.lianfeng.mapper")
 @EnableTransactionManagement
 public class lianfengWebApplication {
     public static void main(String[] args) {

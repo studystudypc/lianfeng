@@ -1,4 +1,4 @@
-package com.lianfeng.web.mapper;
+package com.lianfeng.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.lianfeng.model.entity.Account;

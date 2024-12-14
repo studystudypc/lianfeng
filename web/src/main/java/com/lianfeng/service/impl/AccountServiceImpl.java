@@ -1,8 +1,8 @@
-package com.lianfeng.web.service.impl;
+package com.lianfeng.service.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lianfeng.model.entity.Account;
-import com.lianfeng.web.mapper.AccountMapper;
-import com.lianfeng.web.service.IAccountService;
+import com.lianfeng.mapper.AccountMapper;
+import com.lianfeng.service.IAccountService;
 import org.springframework.stereotype.Service;
 
 /**

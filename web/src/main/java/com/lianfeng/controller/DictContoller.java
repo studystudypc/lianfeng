@@ -1,14 +1,11 @@
 package com.lianfeng.controller;
 
 import com.lianfeng.common.response.R;
-import com.lianfeng.web.service.IDictService;
+import com.lianfeng.service.IDictService;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 

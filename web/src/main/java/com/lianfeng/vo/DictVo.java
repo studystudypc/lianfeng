@@ -1,4 +1,4 @@
-package com.lianfeng.web.po;
+package com.lianfeng.vo;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -16,7 +16,7 @@ import java.util.Date;
  */
 @Data
 @ApiModel(value = "Dict参数")
-public class DictPo {
+public class DictVo {
     /**
      * 字典id
      */

@@ -1,10 +1,10 @@
-package com.lianfeng.web.service.impl;
+package com.lianfeng.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lianfeng.common.exception.LFBusinessException;
 import com.lianfeng.model.entity.Dict;
-import com.lianfeng.web.mapper.DictMapper;
-import com.lianfeng.web.service.IDictService;
+import com.lianfeng.mapper.DictMapper;
+import com.lianfeng.service.IDictService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 

@@ -1,4 +1,4 @@
-package com.lianfeng.web.service;
+package com.lianfeng.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.lianfeng.model.entity.Dict;
