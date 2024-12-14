@@ -2,7 +2,7 @@ package com.lianfeng.web.service.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lianfeng.model.entity.Account;
 import com.lianfeng.web.mapper.AccountMapper;
-import com.lianfeng.web.service.AccountService;
+import com.lianfeng.web.service.IAccountService;
 import org.springframework.stereotype.Service;
 
 /**
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 */
 @Service
 public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account>
-    implements AccountService {
+    implements IAccountService {
 
 }
 

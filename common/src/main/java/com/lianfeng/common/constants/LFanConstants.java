@@ -4,9 +4,9 @@ package com.lianfeng.common.constants;
 import com.alibaba.excel.util.StringUtils;
 
 /**
- * RPan公用基础常量类
+ * LF公用基础常量类
  */
-public interface RPanConstants {
+public interface LFanConstants {
 
     /**
      * 公用的字符串分隔符
@@ -66,7 +66,7 @@ public interface RPanConstants {
     /**
      * 组件扫描基础路径
      */
-    String BASE_COMPONENT_SCAN_PATH = "com.imooc.pan";
+    String BASE_COMPONENT_SCAN_PATH = "com.lianfeng";
 
     /**
      * 问号常量

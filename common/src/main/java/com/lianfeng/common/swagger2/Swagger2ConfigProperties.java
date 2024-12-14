@@ -1,5 +1,6 @@
 package com.lianfeng.common.swagger2;
 
+import com.lianfeng.common.constants.LFanConstants;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -14,21 +15,21 @@ public class Swagger2ConfigProperties {
 
     private boolean show = true;
 
-    private String groupName = "r-pan";
+    private String groupName = "LF";
 
-    private String basePackage = RPanConstants.BASE_COMPONENT_SCAN_PATH;
+    private String basePackage = LFanConstants.BASE_COMPONENT_SCAN_PATH;
 
-    private String title = "r-pan-server";
+    private String title = "LF-server";
 
-    private String description = "r-pan-server";
+    private String description = "LF-server";
 
     private String termsOfServiceUrl = "http://127.0.0.1:${server.port}";
 
-    private String contactName = "rubin";
+    private String contactName = "LCP";
 
-    private String contactUrl = "https://blog.rubinchu.com";
+    private String contactUrl = "https://check.maokuaiji.com";
 
-    private String contactEmail = "rubinchu@126.com";
+    private String contactEmail = "1101637245@qq.com";
 
     private String version = "1.0";
 
