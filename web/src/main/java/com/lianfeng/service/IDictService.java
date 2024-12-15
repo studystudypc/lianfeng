@@ -17,4 +17,9 @@ public interface IDictService extends IService<Dict> {
      * @param file
      */
     void uploadFile(MultipartFile file);
+
+    /**
+     * 文件检查接口
+     */
+    void checkFile(MultipartFile file);
 }

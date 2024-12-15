@@ -19,10 +19,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * @author LCP
@@ -60,7 +58,28 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict>
         List<Dict> dictList = readLocalExcel(path);
         List<Dict> processedDictList = ifDicetId(dictList);
         upDBExcel(processedDictList);
-        clearLocalFile(path);
+//        clearLocalFile(path);
+    }
+
+    /**
+     * @return
+     * @Author liuchuanping
+     * @Description 文件检查
+     *  1.先比较文件大小
+     *
+     *  （思路1）
+     *  查出数据库内容，转换为json字符
+     *  在读出excel文件，转换为json字符
+     *  比较json字符串
+     *
+     *  （思路2）
+     *  查出数据库直接与excle进行比较
+     * @Date 2024-12-15 22:44
+     * @param file
+     **/
+    @Override
+    public void checkFile(MultipartFile file) {
+
     }
 
     /**********************************private**********************************/
@@ -129,13 +148,17 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict>
      * @return 6位数字Id
      */
     private Integer generateDictId() {
-        long timestamp = System.currentTimeMillis();
-        int last6Digits = (int) (timestamp % 1000000);
-        if (last6Digits < 100000) {
-            Random random = new Random();
-            last6Digits += random.nextInt(100000);
+        Set<String> set = new HashSet<>();
+        Integer result = null;
+        while (set.size() < 6) {
+            String uuid = UUID.randomUUID().toString().replace("-", "").substring(0, 6);  // 取UUID的前6个字符
+            if (!set.contains(uuid)) {
+                set.add(uuid);
+                // 将UUID的前6个字符转换为整数
+                result = Integer.parseInt(uuid, 16);  // 将16进制字符串转换为整数
+            }
         }
-        return last6Digits;
+        return result;
     }
 
     /**
@@ -179,14 +202,27 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict>
             targetDir = targetDir.replace("\\", "/");
         }
 
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        Date now = new Date();
+        String formattedDate = dateFormat.format(now);
+
+        String extension = "";
+        int i = fileName.lastIndexOf('.');
+        if (i > 0) {
+            extension = fileName.substring(i);
+            fileName = fileName.substring(0, i);
+        }
+        fileName += "." + formattedDate + extension;
+
         File dir = new File(targetDir);
         if (!dir.exists()) {
             dir.mkdirs(); // 如果目录不存在，则创建目录
         }
+
         File targetFile = new File(dir, fileName);
 
         if (targetFile.exists()) {
-            throw new LFBusinessException("文件名重复，目录中已存在同名文件。");
+            throw new LFBusinessException("点击请勿频繁，请稍等重试");
         }
 
         try {
