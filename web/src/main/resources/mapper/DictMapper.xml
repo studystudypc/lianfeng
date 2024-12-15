@@ -2,7 +2,7 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.lianfeng.web.mapper.DictMapper">
+<mapper namespace="com.lianfeng.mapper.DictMapper">
 
     <resultMap id="BaseResultMap" type="com.lianfeng.model.entity.Dict">
             <id property="dictId" column="dict_id" jdbcType="INTEGER"/>
@@ -44,4 +44,9 @@
         is_public,ask_manager,customer_used,
         is_from_public,dict_type
     </sql>
+    <select id="findDBDictIds" resultType="java.lang.Integer">
+        SELECT dict_id FROM dict
+    </select>
+
+
 </mapper>

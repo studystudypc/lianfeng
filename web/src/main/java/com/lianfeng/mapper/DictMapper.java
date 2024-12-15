@@ -3,6 +3,8 @@ package com.lianfeng.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.lianfeng.model.entity.Dict;
 
+import java.util.List;
+
 /**
 * @author LCP
 * @description 针对表【dict】的数据库操作Mapper
@@ -11,6 +13,7 @@ import com.lianfeng.model.entity.Dict;
 */
 public interface DictMapper extends BaseMapper<Dict> {
 
+    List<Integer> findDBDictIds();
 }
 
 

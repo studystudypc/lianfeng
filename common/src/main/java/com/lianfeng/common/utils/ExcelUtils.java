@@ -6,13 +6,9 @@ import com.alibaba.excel.read.listener.ReadListener;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lianfeng.common.exception.LFBusinessException;
 import com.lianfeng.common.listenner.ExcelListenner;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * @version 1.8
@@ -31,7 +27,7 @@ public class ExcelUtils {
      * @param readListener 读取监听器，用于处理读取到的数据
      * @param <T>         数据类型
      **/
-    public static <T> void readExcel(String filePath, Class<T> dataClass, ReadListener<T> readListener) {
+    public static <T> void  readExcel(String filePath, Class<T> dataClass, ReadListener<T> readListener) {
         if (filePath == null || filePath.isEmpty()) {
             System.err.println("Excel文件路径为空");
             throw new LFBusinessException("Excel文件路径为空");
@@ -42,6 +38,7 @@ public class ExcelUtils {
 
         try {
             EasyExcel.read(new File(filePath), dataClass, readListener).sheet().doRead();
+//            EasyExcel.read("F:\\联丰\\lianfeng\\file\\path\\dict\\基础字典.xls", dataClass, readListener).sheet(0).doRead();
         } catch (Exception e) {
             throw new LFBusinessException("读取Excel文件时发生错误");
         }
@@ -75,8 +72,9 @@ public class ExcelUtils {
      * @Author liuchuanping
      * @Description 把读取的数据转换为Json数据
      * @Date 2024-12-14 21:49
-     * @Param * @param null
-     * @return * @return {@link null }
+     * @Param filePath 文件路径
+     * @Param dataClass 实体对象
+     * @return json
      **/
     public static <T> String ExcelToJson(String filePath, Class<T> dataClass) {
         ExcelListenner<T> excelListenner = new ExcelListenner<>();
