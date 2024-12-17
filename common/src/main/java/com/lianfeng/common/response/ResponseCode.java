@@ -17,7 +17,7 @@ public enum ResponseCode {
     /**
      * 错误
      */
-    ERROR(1, "ERROR"),
+    ERROR(99, "ERROR"),
     /**
      * token过期
      */

@@ -2,6 +2,8 @@ package com.lianfeng.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.lianfeng.model.entity.Dict;
+import org.apache.ibatis.annotations.Param;
+import org.mapstruct.Mapper;
 
 import java.util.List;
 
@@ -11,9 +13,13 @@ import java.util.List;
 * @createDate 2024-12-12 21:30:58
 * @Entity .com.lianfeng.model.entity.Dict
 */
+@Mapper
 public interface DictMapper extends BaseMapper<Dict> {
 
+
     List<Integer> findDBDictIds();
+
+    void saveDict(Dict dict);
 }
 
 

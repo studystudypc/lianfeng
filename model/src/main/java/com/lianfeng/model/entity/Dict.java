@@ -7,6 +7,9 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @TableName(value ="dict")
@@ -15,6 +18,7 @@ public class Dict implements Serializable {
 
     @TableId(value = "dict_id", type = IdType.AUTO)
     @ExcelProperty("dict_id")
+    @JsonProperty("dict_id")
     private Integer dictId;
 
     @TableField(value = "state_id")
@@ -30,10 +34,12 @@ public class Dict implements Serializable {
     private Long companyId;
 
     @TableField(value = "key_words")
+    @JsonProperty("key_words")
     @ExcelProperty("key_words")
     private String keyWords;
 
     @TableField(value = "vendor")
+    @JsonProperty("vendor")
     @ExcelProperty("vendor")
     private String vendor;
 
@@ -42,6 +48,7 @@ public class Dict implements Serializable {
     private String accountCode;
 
     @TableField(value = "account")
+    @JsonProperty("account")
     @ExcelProperty("account")
     private String account;
 

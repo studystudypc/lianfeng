@@ -1,7 +1,13 @@
 package com.lianfeng.common.utils;
 
+import cn.hutool.core.lang.Dict;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lianfeng.common.exception.LFBusinessException;
+import org.apache.poi.ss.formula.functions.T;
+
+import java.util.List;
 
 /**
  * @version 1.8
@@ -42,6 +48,23 @@ public class JsonUtiles {
             return objectMapper.readValue(json, clazz);
         } catch (Exception e) {
           throw new LFBusinessException("Json格式转换出错");
+        }
+    }
+    /**
+     * 将JSON字符串转换为实体对象列表。
+     *
+     * @param <T> 实体对象类型
+     * @param json JSON字符串
+     * @param clazz 实体对象类
+     * @return 实体对象列表
+     */
+    public static <T> List<T> jsonToList(String json, Class<T> clazz) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        JavaType type = objectMapper.getTypeFactory().constructCollectionType(List.class, clazz);
+        try {
+            return objectMapper.readValue(json, type);
+        } catch (JsonProcessingException e) {
+            throw new LFBusinessException("Json格式转换出错");
         }
     }
 }

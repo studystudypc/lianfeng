@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>文件上传</title>
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<h3>上传 Excel 文件</h3>
+<form id="uploadForm" enctype="multipart/form-data">
+    <label for="file">选择 Excel 文件:</label>
+    <input type="file" id="file" name="file" accept=".xls">
+    <button type="button" id="uploadBtn">上传文件</button>
+</form>
+
+<script>
+    $("#uploadBtn").click(function () {
+        const formData = new FormData();
+        const file = $("#file")[0].files[0];
+
+        if (!file) {
+            alert("请先选择文件！");
+            return;
+        }
+
+        formData.append("file", file);
+
+        $.ajax({
+            url: "/dict/uploadExcel",
+            method: "POST",
+            data: formData,
+            processData: false, // 必须为 false
+            contentType: false, // 必须为 false
+            success: function (data) {
+                alert(data.message);
+            },
+            error: function (xhr, status, error) {
+                alert("上传失败: " + error);
+            }
+        });
+    });
+</script>
+</body>
+</html>

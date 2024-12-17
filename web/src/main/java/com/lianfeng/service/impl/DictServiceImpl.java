@@ -3,24 +3,25 @@ package com.lianfeng.service.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lianfeng.common.exception.LFBusinessException;
 import com.lianfeng.common.listenner.ExcelListenner;
-import com.lianfeng.common.utils.ExcelUtils;
 import com.lianfeng.common.utils.FileUtils;
 import com.lianfeng.constans.DictConstants;
 import com.lianfeng.model.entity.Dict;
 import com.lianfeng.mapper.DictMapper;
+import com.lianfeng.po.DictPoToExcel;
 import com.lianfeng.service.IDictService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+
+import static com.lianfeng.common.utils.ExcelUtils.readExcel;
 
 /**
  * @author LCP
@@ -47,51 +48,165 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict>
      * @Date 2024-12-14 22:54
      * @Param file
      **/
-    @Override
+/*    @Override
+    @Transactional
     public void uploadFile(MultipartFile file) {
         if (file.isEmpty()) {
             throw new LFBusinessException("上传文件内容为空");
         }
         String fileName = file.getOriginalFilename();
         ifXmlOrXmls(fileName);
+
         String path = uploadFileToLocal(fileName,file);
         List<Dict> dictList = readLocalExcel(path);
         List<Dict> processedDictList = ifDicetId(dictList);
         upDBExcel(processedDictList);
 //        clearLocalFile(path);
-    }
+    }*/
 
     /**
      * @return
      * @Author liuchuanping
-     * @Description 文件检查
+     * @Description
+     * 文件检查
      *  1.先比较文件大小
      *
-     *  （思路1）
-     *  查出数据库内容，转换为json字符
-     *  在读出excel文件，转换为json字符
-     *  比较json字符串
+     *  2.比较文件字节
      *
-     *  （思路2）
-     *  查出数据库直接与excle进行比较
+     *  3.删除文件内容
      * @Date 2024-12-15 22:44
+     * @param absolutePath
      * @param file
      **/
     @Override
-    public void checkFile(MultipartFile file) {
+    @Transactional
+    public void checkFile(String absolutePath,MultipartFile file) {
 
+        if (!compareFiles(file,absolutePath)) {
+            throw new LFBusinessException("文件内容不匹配");
+        }
+
+        List<Dict> listExcel = readLocalExcel(absolutePath);//读取的excel文件内容
+        List<DictPoToExcel> dictPoToExcelList = new ArrayList<>();//实体转换存入的数组
+
+        for (Dict dict : listExcel) {
+            DictPoToExcel dictPoToExcel = new DictPoToExcel();
+            try {
+                BeanUtils.copyProperties(dict,dictPoToExcel);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            dictPoToExcelList.add(dictPoToExcel);
+        }
+
+        List<Dict> dbDicts  = list();//数据库中数据
+        List<DictPoToExcel> dictPoToDB = new ArrayList<>();//实体转换存入的数组
+
+        for (Dict dict : dbDicts) {
+            DictPoToExcel dictPoToExcel = new DictPoToExcel();
+            try {
+                BeanUtils.copyProperties(dict,dictPoToExcel);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            dictPoToDB.add(dictPoToExcel);
+        }
+
+      /*  if (!compareDictLists(dictPoToExcelList, dictPoToDB)) {
+            throw new LFBusinessException("数据文件内容与Excel文件内容不一样");
+        }*/
+
+        //删除本地文件内容
+        clearLocalFile(absolutePath);
+    }
+
+
+
+    /**
+     * @return
+     * @Author liuchuaning
+     * @Description
+     *  上传文件内容，为后续判断文件是否出错做准备
+     *  读取Excel文件内容
+     *  把Excel文件内容转为entity格式
+     *  存入数据库
+     * @Date 2024-12-16 10:05
+     * @Param file
+     **/
+    @Override
+    @Transactional
+    public String uploadExcel(MultipartFile file) {
+       String absolutePath = uploadFileToLocal(file.getOriginalFilename(), file);
+
+        List<Dict> dicts = readLocalExcel(absolutePath);
+
+        for (Dict dict : dicts) {
+//            dictMapper.saveDict(dict);
+            saveOrUpdate(dict);
+        }
+        return absolutePath;
     }
 
     /**********************************private**********************************/
+
+
+    private boolean compareDictLists(List<DictPoToExcel> excelDicts, List<DictPoToExcel> dbDicts) {
+        Set<DictPoToExcel> excelDictSet = new HashSet<>(excelDicts);
+
+        for (DictPoToExcel dict : dbDicts) {
+            if (!excelDictSet.contains(dict)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    /**
+     * @return *
+     * @Author liuchuaning
+     * @Description
+     * 比较上传的文件内容和本地文件内容是否一样
+     * @Date 2024-12-16 14:15
+     * @Param
+     * @return true
+     **/
+    private boolean compareFiles(MultipartFile file, String absolutePath) {
+        try {
+            // 确保上传的文件不为空
+            if (file.isEmpty()) {
+                throw new IllegalArgumentException("上传的文件不能为空");
+            }
+
+            // 读取上传文件的内容到字节数组中
+            byte[] uploadedFileContent = file.getBytes();
+
+            // 读取本地文件的内容
+            Path path = Paths.get(absolutePath);
+            if (!Files.exists(path) || !Files.isRegularFile(path)) {
+                throw new IllegalArgumentException("本地文件不存在或不是一个文件");
+            }
+            byte[] localFileContent = Files.readAllBytes(path);
+
+            // 比较两个文件的内容是否相同
+            return Arrays.equals(uploadedFileContent, localFileContent);
+        } catch (IOException e) {
+            // 处理读取文件时的异常
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 
     /**
      * 删除Excel文件
      */
     private void clearLocalFile(String path) {
         try {
-            Path filePath = Paths.get(path);
+            Path filePath = Paths.get( path);
             Files.delete(filePath);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new LFBusinessException("文件删除失败");
         }
     }
@@ -129,7 +244,8 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict>
             Dict dict = iterator.next();
             Integer dictId = dict.getDictId();
             if (dictId == null) {
-                dict.setDictId(generateDictId());
+                String generatedDictId = generateDictId();
+                dict.setDictId(Integer.valueOf(generatedDictId));
             } else if (DBDictIds.contains(dictId)) {
                 // 如果数据库中已存在该dict_id，从迭代器中移除
                 iterator.remove();
@@ -147,18 +263,21 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict>
      *
      * @return 6位数字Id
      */
-    private Integer generateDictId() {
+    private String generateDictId() {
         Set<String> set = new HashSet<>();
         Integer result = null;
-        while (set.size() < 6) {
-            String uuid = UUID.randomUUID().toString().replace("-", "").substring(0, 6);  // 取UUID的前6个字符
-            if (!set.contains(uuid)) {
-                set.add(uuid);
-                // 将UUID的前6个字符转换为整数
-                result = Integer.parseInt(uuid, 16);  // 将16进制字符串转换为整数
+        synchronized (this) {
+            while (set.size() < 6) {
+                String uuid = UUID.randomUUID().toString().replace("-", "").substring(0, 6);  // 取UUID的前6个字符
+                if (!set.contains(uuid)) {
+                    set.add(uuid);
+                    // 将UUID的前6个字符转换为整数
+                    result = Integer.parseInt(uuid, 16);  // 将16进制字符串转换为整数
+                    break; // 找到唯一ID后退出循环
+                }
             }
         }
-        return result;
+        return result.toString();
     }
 
     /**
@@ -168,7 +287,7 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict>
      */
     private List<Dict> readLocalExcel(String path) {
         ExcelListenner<Dict> listener = new ExcelListenner<>();
-        ExcelUtils.readExcel(path, Dict.class, listener);
+        readExcel(path, Dict.class, listener);
         return listener.getDataList();
     }
 
@@ -188,7 +307,8 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict>
      * 判断系统
      * 生成路径
      * 上传文件
-     *
+     * @param fileName 文件名字
+     * @param file 文件
      * @return 文件的绝对路径
      */
     private String uploadFileToLocal(String fileName,MultipartFile file) {
@@ -235,6 +355,7 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict>
 
         return targetFile.getAbsolutePath(); // 返回文件的绝对路径
     }
+
 }
 
 

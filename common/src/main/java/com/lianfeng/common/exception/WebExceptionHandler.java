@@ -17,12 +17,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class WebExceptionHandler {
 
-    @ExceptionHandler(value = LFBusinessException.class)
+  /*  @ExceptionHandler(value = LFBusinessException.class)
     public R rPanBusinessExceptionHandler(LFBusinessException e) {
         return R.fail(e.getCode(), e.getMessage());
-    }
+    }*/
 
-    @ExceptionHandler(value = MethodArgumentNotValidException.class)
+   /* @ExceptionHandler(value = MethodArgumentNotValidException.class)
     public R methodArgumentNotValidExceptionHandler(MethodArgumentNotValidException e) {
         ObjectError objectError = e.getBindingResult().getAllErrors().stream().findFirst().get();
         return R.fail(ResponseCode.ERROR_PARAM.getCode(), objectError.getDefaultMessage());
@@ -47,6 +47,6 @@ public class WebExceptionHandler {
     @ExceptionHandler(value = RuntimeException.class)
     public R runtimeExceptionHandler(RuntimeException e) {
         return R.fail(ResponseCode.ERROR.getCode(), e.getMessage());
-    }
+    }*/
 
 }

@@ -97,4 +97,15 @@ public interface LFanConstants {
      * 公用加密字符串
      */
     String COMMON_ENCRYPT_STR = "****";
+
+    /**
+     * xls
+     */
+    String NAME_XLS = "xls";
+
+    /**
+     *
+     */
+    String NAME_XLSX = "xlsx";
+
 }

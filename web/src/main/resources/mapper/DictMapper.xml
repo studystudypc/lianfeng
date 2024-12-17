@@ -44,8 +44,40 @@
         is_public,ask_manager,customer_used,
         is_from_public,dict_type
     </sql>
+
+    <insert id="saveDict">
+        <choose>
+            <when test="dictId != null">
+                update dict
+                <set>
+                    <if test="keyWords != null">`key_words` = #{keyWords},</if>
+                    <if test="account != null">`account` = #{account},</if>
+                    <if test="vendor != null">`vendor` = #{vendor},</if>
+                </set>
+                where `dict_id` = #{dictId}
+            </when>
+            <otherwise>
+                insert into dict
+                <trim prefix="(" suffix=")" suffixOverrides=",">
+                    <if test="dictId != null">`dict_id`,</if>
+                    <if test="keyWords != null">`key_words`,</if>
+                    <if test="account != null">`account`,</if>
+                    <if test="vendor != null">`vendor`,</if>
+                </trim>
+                <trim prefix="values (" suffix=")" suffixOverrides=",">
+                    <if test="dictId != null">#{dictId},</if>
+                    <if test="keyWords != null">#{keyWords},</if>
+                    <if test="account != null">#{account},</if>
+                    <if test="vendor != null">#{vendor},</if>
+                </trim>
+            </otherwise>
+        </choose>
+    </insert>
+
+
+
     <select id="findDBDictIds" resultType="java.lang.Integer">
-        SELECT dict_id FROM dict
+        SELECT dict_id FROM `dict`
     </select>
 
 
