@@ -16,10 +16,6 @@ import java.util.List;
 @Mapper
 public interface DictMapper extends BaseMapper<Dict> {
 
-
-    List<Integer> findDBDictIds();
-
-    void saveDict(Dict dict);
 }
 
 
