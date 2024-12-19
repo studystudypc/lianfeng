@@ -15,10 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -37,9 +34,6 @@ import java.util.Date;
 public class DatabaseContoller {
 
     @Autowired
-    private IDictService iDictService;
-
-    @Autowired
     private IDatabaseService iDatabaseService;
     @ApiOperation(
             value = "文件上传接口，",
@@ -52,8 +46,27 @@ public class DatabaseContoller {
     )
     @PostMapping("uploadExcel")
     public R<String> uploadExcel(@RequestPart("file")  MultipartFile file, String name) {
+        if (file.isEmpty() || name.isEmpty()){
+            return R.fail("文件上传为空或文件名字为空");
+        }
         String absolutePath = iDatabaseService.uploadExcel(file,name);
 //        iDatabaseService.checkFile(absolutePath,file);
         return R.success("文件上传成功");
     }
+
+    @ApiOperation(
+            value = "比较数据库结构",
+            notes = "比较两个数据库（源数据库和目标数据库）中某个数据表的结构是否相同," +
+                    "sourceTableName = 源数据库某表名字，" +
+                    "targetTableName = 目标数据库某表名字",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @PostMapping("compareDB")
+    public R compareDB(@RequestBody String sourceTableName, String targetTableName){
+        iDatabaseService.compareDB(sourceTableName,targetTableName);
+        return R.success("数据结构相同");
+    }
+
+
 }

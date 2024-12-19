@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lianfeng.web.mapper.AccountMapper">
+
+    <resultMap id="BaseResultMap" type="com.lianfeng.model.entity.Account">
+            <id property="accountId" column="account_id" jdbcType="INTEGER"/>
+            <result property="accountCode" column="account_code" jdbcType="VARCHAR"/>
+            <result property="accountName" column="account_name" jdbcType="VARCHAR"/>
+            <result property="accountDes" column="account_des" jdbcType="VARCHAR"/>
+            <result property="calculate" column="calculate" jdbcType="INTEGER"/>
+            <result property="assistantUse1" column="assistant_use1" jdbcType="INTEGER"/>
+            <result property="assistantUse" column="assistant_use" jdbcType="INTEGER"/>
+            <result property="assistantUse2" column="assistant_use2" jdbcType="INTEGER"/>
+            <result property="accountClass" column="account_class" jdbcType="VARCHAR"/>
+            <result property="customerUse" column="customer_use" jdbcType="INTEGER"/>
+            <result property="drake" column="drake" jdbcType="VARCHAR"/>
+            <result property="disabled" column="disabled" jdbcType="INTEGER"/>
+            <result property="trialBlanceId" column="trial_blance_id" jdbcType="INTEGER"/>
+            <result property="demo" column="demo" jdbcType="VARCHAR"/>
+            <result property="isAsset" column="is_asset" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        account_id,account_code,account_name,
+        account_des,calculate,assistant_use1,
+        assistant_use,assistant_use2,account_class,
+        customer_use,drake,disabled,
+        trial_blance_id,demo,is_asset
+    </sql>
+</mapper>

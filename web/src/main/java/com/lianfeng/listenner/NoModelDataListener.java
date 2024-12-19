@@ -4,6 +4,7 @@ import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
 import com.alibaba.excel.util.ListUtils;
 import com.alibaba.fastjson.JSON;
+import com.lianfeng.common.exception.LFBusinessException;
 import com.lianfeng.common.utils.JdbcUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -66,9 +67,10 @@ public class NoModelDataListener extends AnalysisEventListener<Map<Integer, Stri
      * 使用字符串拼接的方法
      * 用jdbc写入
      */
+
     private void saveData() {
         if (cachedDataList.isEmpty()) {
-            return;
+            throw new LFBusinessException("解析Excel文件内容失败");
         }
 
         StringBuilder sql = new StringBuilder("INSERT IGNORE INTO " + TABLE_NAME + " (");
@@ -94,8 +96,11 @@ public class NoModelDataListener extends AnalysisEventListener<Map<Integer, Stri
             sql.setLength(sql.length() - 2); // 去掉最后的逗号和空格
         }
 
-        JdbcUtil.update(sql.toString());
-//        jdbcTemplate.execute("INSERT INTO dict (dict_id, key_words, vendor, account) VALUES ('1257','1Point3AcresLLC','1Point3AcresLLC','Advertising'), ('907','800.COM','800.COM','Advertising'), ('1273','CHAT RAYS MEDIA','CHAT RAYS MEDIA','Advertising'), ('5007','CHINA JOURNAL','','Advertising'), ('894','GOOGLE *ADS','GOOGLE *ADS','Advertising')");
-//        jdbcTemplate.update(sql.toString());
+        try {
+            JdbcUtil.update(sql.toString());
+        }catch (LFBusinessException e){
+            throw new LFBusinessException("数据库更新失败");
+        }
+
     }
 }

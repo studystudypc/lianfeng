@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lianfeng.mapper.DictMapper">
+
+    <resultMap id="BaseResultMap" type="com.lianfeng.model.entity.Dict">
+            <id property="dictId" column="dict_id" jdbcType="INTEGER"/>
+            <result property="stateId" column="state_id" jdbcType="INTEGER"/>
+            <result property="industryId" column="industry_id" jdbcType="INTEGER"/>
+            <result property="companyId" column="company_id" jdbcType="BIGINT"/>
+            <result property="keyWords" column="key_words" jdbcType="VARCHAR"/>
+            <result property="vendor" column="vendor" jdbcType="VARCHAR"/>
+            <result property="accountCode" column="account_code" jdbcType="VARCHAR"/>
+            <result property="account" column="account" jdbcType="VARCHAR"/>
+            <result property="description" column="description" jdbcType="VARCHAR"/>
+            <result property="dictOrder" column="dict_order" jdbcType="INTEGER"/>
+            <result property="beizhu" column="beizhu" jdbcType="VARCHAR"/>
+            <result property="keyIsWord" column="key_is_word" jdbcType="INTEGER"/>
+            <result property="isApprove" column="is_approve" jdbcType="INTEGER"/>
+            <result property="dictStatus" column="dict_status" jdbcType="INTEGER"/>
+            <result property="disabled" column="disabled" jdbcType="INTEGER"/>
+            <result property="userIdCreate" column="user_id_create" jdbcType="BIGINT"/>
+            <result property="userIdUpdate" column="user_id_update" jdbcType="BIGINT"/>
+            <result property="companyIdCreate" column="company_id_create" jdbcType="BIGINT"/>
+            <result property="userIdApprove" column="user_id_approve" jdbcType="BIGINT"/>
+            <result property="timeCreate" column="time_create" jdbcType="TIMESTAMP"/>
+            <result property="isAutoMatch" column="is_auto_match" jdbcType="INTEGER"/>
+            <result property="isPublic" column="is_public" jdbcType="INTEGER"/>
+            <result property="askManager" column="ask_manager" jdbcType="INTEGER"/>
+            <result property="customerUsed" column="customer_used" jdbcType="INTEGER"/>
+            <result property="isFromPublic" column="is_from_public" jdbcType="INTEGER"/>
+            <result property="dictType" column="dict_type" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        dict_id,state_id,industry_id,
+        company_id,key_words,vendor,
+        account_code,account,description,
+        dict_order,beizhu,key_is_word,
+        is_approve,dict_status,disabled,
+        user_id_create,user_id_update,company_id_create,
+        user_id_approve,time_create,is_auto_match,
+        is_public,ask_manager,customer_used,
+        is_from_public,dict_type
+    </sql>
+
+
+
+
+</mapper>

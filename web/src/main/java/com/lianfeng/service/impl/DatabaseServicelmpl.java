@@ -57,6 +57,24 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
         return absolutePath;
     }
 
+
+    /**
+     * @Author liuchuanping
+     * @Description
+     * 比较数据库结构
+     * 获取源 sql 文件的表字段信息
+     * 获取目标 sql 文件的表字段信息
+     * 比较两个 sql 文件的字段信息
+     * @Date 2024-12-19 10:48
+     * @Param sourceTableName
+     * @param targetTableName
+     * @return
+     **/
+    @Override
+    public void compareDB(String sourceTableName, String targetTableName) {
+
+    }
+
     /**********************************private**********************************/
 
     /**

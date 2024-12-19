@@ -17,10 +17,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class WebExceptionHandler {
 
-  /*  @ExceptionHandler(value = LFBusinessException.class)
+    @ExceptionHandler(value = LFBusinessException.class)
     public R rPanBusinessExceptionHandler(LFBusinessException e) {
         return R.fail(e.getCode(), e.getMessage());
-    }*/
+    }
 
    /* @ExceptionHandler(value = MethodArgumentNotValidException.class)
     public R methodArgumentNotValidExceptionHandler(MethodArgumentNotValidException e) {
