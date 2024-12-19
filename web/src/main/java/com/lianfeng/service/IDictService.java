@@ -2,6 +2,7 @@ package com.lianfeng.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.lianfeng.model.entity.Dict;
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -30,5 +31,5 @@ public interface IDictService extends IService<Dict> {
      * 并把Excel数据存入数据库
      * @param file
      */
-    String uploadExcel(MultipartFile file);
+    String uploadExcel(MultipartFile file,String name);
 }

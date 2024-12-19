@@ -1,9 +1,13 @@
 package com.lianfeng.controller;
 
 import com.lianfeng.common.response.R;
+import com.lianfeng.mapper.DatabaseMapper;
+import com.lianfeng.service.IDatabaseService;
 import com.lianfeng.service.IDictService;
+import com.lianfeng.service.impl.DatabaseServicelmpl;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -20,19 +24,4 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 public class DictContoller {
 
-    @Autowired
-    private IDictService iDictService;
-
-    @ApiOperation(
-            value = "文件上传接口",
-            notes = "上传Excel文件,并存入数据库",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
-    )
-    @PostMapping("uploadExcel")
-    public R<String> uploadExcel(@RequestPart("file")  MultipartFile file) {
-        String absolutePath = iDictService.uploadExcel(file);
-        iDictService.checkFile(absolutePath,file);
-        return R.success("文件上传成功");
-    }
 }

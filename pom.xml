@@ -42,6 +42,20 @@
             </dependency>
 
 
+            <!-- spring boot 集成 jdbc 依赖包 -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-jdbc</artifactId>
+            </dependency>
+
+            <!-- mysql 驱动 -->
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <scope>runtime</scope>
+            </dependency>
+
+
         </dependencies>
     </dependencyManagement>
 

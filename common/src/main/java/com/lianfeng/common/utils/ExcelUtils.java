@@ -11,15 +11,11 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import static cn.hutool.poi.excel.cell.CellUtil.getCellValue;
 import static com.lianfeng.common.constants.LFanConstants.NAME_XLS;
 import static com.lianfeng.common.constants.LFanConstants.NAME_XLSX;
 
@@ -101,73 +97,16 @@ public class ExcelUtils {
     }
 
     /**
-     * 读入excel文件，解析后返回
-     * @param file MultipartFile对象
-     * @return 包含每行数据的列表
-     * @throws IOException 文件读取异常
-     */
-   /* public static List<String[]> readExcel(MultipartFile file)  {
-        try {
-            checkFile(file);
-        } catch (IOException e) {
-            throw new LFBusinessException("文件不存在");
-        }
-        Workbook workbook = null;
-        try {
-            workbook = getWorkBook(file);
-        } catch (IOException e) {
-            throw new LFBusinessException("不支持的文件格式");
-        }
-        List<String[]> list = new ArrayList<>();
-        if (workbook != null) {
-            try {
-                for (int sheetNum = 0; sheetNum < workbook.getNumberOfSheets(); sheetNum++) {
-                    Sheet sheet = workbook.getSheetAt(sheetNum);
-                    if (sheet == null) continue;
-
-                    int firstRowNum = sheet.getFirstRowNum();
-                    int lastRowNum = sheet.getLastRowNum();
-
-                    for (int rowNum = firstRowNum + 1; rowNum <= lastRowNum; rowNum++) {
-                        Row row = sheet.getRow(rowNum);
-                        if (row == null) continue;
-
-                        int firstCellNum = row.getFirstCellNum();
-                        int lastCellNum = row.getLastCellNum();
-                        String[] cells = new String[lastCellNum];
-
-                        for (int cellNum = firstCellNum; cellNum < lastCellNum; cellNum++) {
-                            Cell cell = row.getCell(cellNum);
-                            cells[cellNum] = getCellValue(cell);
-                        }
-                        list.add(cells);
-                    }
-                }
-            } finally {
-                try {
-                    workbook.close();
-                } catch (IOException e) {
-                    throw new LFBusinessException("关闭失败");
-                }
-            }
-        }
-        return list;
-    }*/
+     * @Author liuchuaning
+     * @Description 传入Excel文件，读取Excel忘记拿内容
+     * @Date 2024-12-17 14:38
+     * @param file
+     * @return List<String[]>
+     **/
     public static List<String[]> readExcel(MultipartFile file) {
-        try {
-            checkFile(file);
-        } catch (IOException e) {
-            throw new LFBusinessException("文件不存在");
-        }
-        Workbook workbook = null;
-        try {
-            workbook = getWorkBook(file);
-        } catch (IOException e) {
-            throw new LFBusinessException("不支持的文件格式");
-        }
         List<String[]> list = new ArrayList<>();
-        if (workbook != null) {
-            try {
+        try (Workbook workbook = getWorkBook(file)) {
+            if (workbook != null) {
                 for (int sheetNum = 0; sheetNum < workbook.getNumberOfSheets(); sheetNum++) {
                     Sheet sheet = workbook.getSheetAt(sheetNum);
                     if (sheet == null) continue;
@@ -181,23 +120,28 @@ public class ExcelUtils {
                         int lastCellNum = row.getLastCellNum();
                         String[] cells = new String[lastCellNum - firstCellNum];
 
+                        boolean isEmpty = true;
                         for (int cellNum = firstCellNum; cellNum < lastCellNum; cellNum++) {
                             Cell cell = row.getCell(cellNum);
-                            cells[cellNum - firstCellNum] = getCellValue(cell);
+                            String cellValue = getCellValue(cell);
+                            cells[cellNum - firstCellNum] = cellValue;
+                            if (!cellValue.isEmpty()) {
+                                isEmpty = false;
+                            }
                         }
-                        list.add(cells);
+                        // 如果行不为空，则添加到列表中
+                        if (!isEmpty) {
+                            list.add(cells);
+                        }
                     }
                 }
-            } finally {
-                try {
-                    workbook.close();
-                } catch (IOException e) {
-                    throw new LFBusinessException("关闭失败");
-                }
             }
+        } catch (IOException e) {
+            throw new LFBusinessException("不支持的文件格式或关闭失败");
         }
         return list;
     }
+
 
     /**********************************private**********************************/
 
