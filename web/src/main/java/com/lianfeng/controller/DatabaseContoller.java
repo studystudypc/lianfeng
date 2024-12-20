@@ -41,6 +41,7 @@ public class DatabaseContoller {
             notes = "上传Excel文件,并存入数据库，" +
                     "file = 上传的文件，" +
                     "name = 需要上传的数据库表名，" +
+                    "idName = 文件上传的主键字段" +
                     "注意事项：1.上传的Excel文件最后一列值不能为空。" ,
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
