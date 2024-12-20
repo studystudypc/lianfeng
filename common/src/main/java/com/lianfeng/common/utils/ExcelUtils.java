@@ -118,21 +118,14 @@ public class ExcelUtils {
 
                         int firstCellNum = row.getFirstCellNum();
                         int lastCellNum = row.getLastCellNum();
-                        String[] cells = new String[lastCellNum - firstCellNum];
+                        String[] cells = new String[lastCellNum - firstCellNum + firstCellNum]; // 修改这里，确保数组长度正确
 
-                        boolean isEmpty = true;
                         for (int cellNum = firstCellNum; cellNum < lastCellNum; cellNum++) {
                             Cell cell = row.getCell(cellNum);
                             String cellValue = getCellValue(cell);
-                            cells[cellNum - firstCellNum] = cellValue;
-                            if (!cellValue.isEmpty()) {
-                                isEmpty = false;
-                            }
+                            cells[cellNum] = cellValue; // 修改这里，确保索引正确
                         }
-                        // 如果行不为空，则添加到列表中
-                        if (!isEmpty) {
-                            list.add(cells);
-                        }
+                        list.add(cells);
                     }
                 }
             }
@@ -145,15 +138,7 @@ public class ExcelUtils {
 
     /**********************************private**********************************/
 
-    private static void checkFile(MultipartFile file) throws IOException {
-        if (file == null) {
-            throw new FileNotFoundException("文件不存在！");
-        }
-        String fileName = file.getOriginalFilename();
-        if (!fileName.endsWith(NAME_XLS) && !fileName.endsWith(NAME_XLSX)) {
-            throw new IOException(fileName + " 不是excel文件");
-        }
-    }
+
 
     private static Workbook getWorkBook(MultipartFile file) throws IOException {
         String fileName = file.getOriginalFilename();
@@ -202,6 +187,16 @@ public class ExcelUtils {
                 break;
         }
         return cellValue;
+    }
+
+    private static void checkFile(MultipartFile file) throws IOException {
+        if (file == null) {
+            throw new FileNotFoundException("文件不存在！");
+        }
+        String fileName = file.getOriginalFilename();
+        if (!fileName.endsWith(NAME_XLS) && !fileName.endsWith(NAME_XLSX)) {
+            throw new IOException(fileName + " 不是excel文件");
+        }
     }
 
 }

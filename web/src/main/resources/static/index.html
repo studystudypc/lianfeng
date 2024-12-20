@@ -3,41 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文件上传</title>
+    <title>文件上传与对比</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            padding: 20px;
             background-color: #f4f4f4;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 1200px;
+            margin: auto;
         }
         .upload-container {
             background-color: #fff;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 400px;
         }
         h2 {
             text-align: center;
         }
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         .form-group label {
             display: block;
             font-weight: bold;
         }
-        .form-group input[type="file"] {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-        }
-        .form-group input[type="text"] {
+        .form-group input[type="file"],
+        .form-group input[type="text"],
+        .form-group select {
             width: 100%;
             padding: 8px;
             margin-top: 5px;
@@ -57,78 +56,114 @@
         .message {
             margin-top: 20px;
             text-align: center;
-            color: green;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
         }
     </style>
 </head>
 <body>
-<div class="upload-container">
-    <h2>上传Excel文件</h2>
-    <form id="uploadForm">
-        <div class="form-group">
-            <label for="file">选择文件：</label>
-            <input type="file" id="file" name="file" accept=".xlsx, .xls" required>
+<div class="container">
+    <div class="upload-container">
+        <h2>上传和展示文件</h2>
+        <form id="uploadForm">
+            <div class="form-group">
+                <label for="file">选择文件：</label>
+                <input type="file" id="file" name="file" accept=".xls" required>
+            </div>
+            <div class="form-group">
+                <label for="name">数据库表名：</label>
+                <input type="text" id="name" name="name" placeholder="请输入表名" required>
+                <label for="idName">主键字段名：</label>
+                <input type="text" id="idName" name="idName" placeholder="请输入主键字段名" required>
+            </div>
+            <button type="submit">上传文件</button>
+        </form>
+        <div class="message" id="message"></div>
+        <div class="summary" id="summary" style="display:none;">
+            <p>Excel 数据: <span id="numExcel"></span></p>
+            <p>主键有效值数: <span id="numValue"></span></p>
+            <p>主键空值数: <span id="nullValue"></span></p>
+            <p>插入到数据库总计数: <span id="sumNums"></span></p>
         </div>
-        <div class="form-group">
-            <label for="name">数据库表名：</label>
-            <input type="text" id="name" name="name" placeholder="请输入表名" required>
-        </div>
-        <button type="submit">上传文件</button>
-    </form>
-    <div class="message" id="message"></div>
+        <table id="excelTable" style="display:none;">
+            <p>Excel文件内容：</p>
+            <thead id="excelTableHead"></thead>
+            <tbody id="excelTableBody"></tbody>
+        </table>
+    </div>
 </div>
-
 <script>
-    // 获取上传表单元素
     const form = document.getElementById('uploadForm');
     const fileInput = document.getElementById('file');
     const nameInput = document.getElementById('name');
+    const idNameInput = document.getElementById('idName');
     const messageDiv = document.getElementById('message');
+    const summaryDiv = document.getElementById('summary');
+    const numExcel = document.getElementById('numExcel');
+    const numValue = document.getElementById('numValue');
+    const nullValue = document.getElementById('nullValue');
+    const sumNums = document.getElementById('sumNums');
+    const excelTable = document.getElementById('excelTable');
+    const excelTableHead = document.getElementById('excelTableHead');
+    const excelTableBody = document.getElementById('excelTableBody');
 
-    // 监听表单提交事件
     form.addEventListener('submit', function(event) {
-        event.preventDefault(); // 阻止表单默认提交行为
+        event.preventDefault();
 
-        // 获取上传表单元素
-        const form = document.getElementById('uploadForm');
-        const fileInput = document.getElementById('file');
-        const nameInput = document.getElementById('name');
-        const messageDiv = document.getElementById('message');
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        formData.append('name', nameInput.value);
+        formData.append('idName', idNameInput.value);
 
-// 监听表单提交事件
-        form.addEventListener('submit', function(event) {
-            event.preventDefault(); // 阻止表单默认提交行为
-
-            // 创建一个新的FormData对象
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            formData.append('name', nameInput.value);
-
-            // 使用Fetch API发送POST请求
-            fetch('dict/uploadExcel', {
-                method: 'POST',
-                body: formData
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data && data.code === 200) {
-                        // 如果上传成功
-                        messageDiv.textContent = data.message;
-                        messageDiv.style.color = 'green';
-                    } else {
-                        // 如果上传失败，显示后端返回的错误信息
-                        messageDiv.textContent = '错误: ' + (data.message);
-                        messageDiv.style.color = 'red';
-                    }
-                })
-                .catch(error => {
-                    // 如果请求出错
-                    messageDiv.textContent = '发生错误，请稍后重试。';
+        fetch('dict/uploadExcel', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.code === 200) {
+                    messageDiv.textContent = data.message;
+                    messageDiv.style.color = 'green';
+                    displaySummary(data.data);
+                    displayExcelContent(data.data.excelContent);
+                } else {
+                    messageDiv.textContent = '错误: ' + (data.message || '未知错误');
                     messageDiv.style.color = 'red';
-                    console.error(error);
-                });
-        });
+                }
+            })
+            .catch(error => {
+                messageDiv.textContent = '发生错误，请稍后重试。';
+                messageDiv.style.color = 'red';
+                console.error(error);
+            });
     });
+
+    function displaySummary(data) {
+        numExcel.textContent = data.numExcel;
+        numValue.textContent = data.numValue;
+        nullValue.textContent = data.nullValue;
+        sumNums.textContent = data.sumNums;
+        summaryDiv.style.display = 'block';
+    }
+
+    function displayExcelContent(content) {
+        excelTableHead.innerHTML = '<tr>' + content[0].map(header => `<th>${header}</th>`).join('') + '</tr>';
+        excelTableBody.innerHTML = content.slice(1).map(row => '<tr>' + row.map(cell => `<td>${cell || ''}</td>`).join('') + '</tr>').join('');
+        excelTable.style.display = 'table';
+    }
 </script>
 </body>
 </html>

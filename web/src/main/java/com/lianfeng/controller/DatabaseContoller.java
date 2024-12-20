@@ -9,6 +9,7 @@ import com.lianfeng.listenner.NoModelDataListener;
 import com.lianfeng.mapper.DatabaseMapper;
 import com.lianfeng.service.IDatabaseService;
 import com.lianfeng.service.IDictService;
+import com.lianfeng.vo.DatabaseVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,13 +46,13 @@ public class DatabaseContoller {
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
     @PostMapping("uploadExcel")
-    public R<String> uploadExcel(@RequestPart("file")  MultipartFile file, String name) {
+    public R<DatabaseVo> uploadExcel(@RequestPart("file")  MultipartFile file, @RequestParam("name") String name,@RequestParam("idName") String idName) {
         if (file.isEmpty() || name.isEmpty()){
             return R.fail("文件上传为空或文件名字为空");
         }
-        String absolutePath = iDatabaseService.uploadExcel(file,name);
-//        iDatabaseService.checkFile(absolutePath,file);
-        return R.success("文件上传成功");
+        DatabaseVo databaseVo = iDatabaseService.uploadExcel(file,name,idName);
+        return R.data(databaseVo);
+
     }
 
     @ApiOperation(
@@ -64,7 +65,7 @@ public class DatabaseContoller {
     )
     @PostMapping("compareDB")
     public R compareDB(@RequestBody String sourceTableName, String targetTableName){
-        iDatabaseService.compareDB(sourceTableName,targetTableName);
+//        iDatabaseService.compareDB(sourceTableName,targetTableName);
         return R.success("数据结构相同");
     }
 

@@ -1,6 +1,7 @@
 package com.lianfeng.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.lianfeng.vo.DatabaseVo;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface IDatabaseService extends IService<Object> {
@@ -11,13 +12,13 @@ public interface IDatabaseService extends IService<Object> {
      * @param name
      * @return
      */
-    String uploadExcel(MultipartFile file, String name);
+    DatabaseVo uploadExcel(MultipartFile file, String name, String idName);
 
     /**
      * 比较数据库结构
      * @param sourceTableName
      * @param targetTableName
      */
-    void compareDB(String sourceTableName, String targetTableName);
+//    void compareDB(String sourceTableName, String targetTableName);
 
 }

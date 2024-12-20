@@ -67,13 +67,12 @@ public class NoModelDataListener extends AnalysisEventListener<Map<Integer, Stri
      * 使用字符串拼接的方法
      * 用jdbc写入
      */
-
     private void saveData() {
         if (cachedDataList.isEmpty()) {
             throw new LFBusinessException("解析Excel文件内容失败");
         }
 
-        StringBuilder sql = new StringBuilder("INSERT IGNORE INTO " + TABLE_NAME + " (");
+        StringBuilder sql = new StringBuilder("REPLACE INTO " + TABLE_NAME + " (");
         sql.append(String.join(", ", HeadList)).append(") VALUES ");
 
         for (Map<Integer, String> dataMap : cachedDataList) {
@@ -101,6 +100,5 @@ public class NoModelDataListener extends AnalysisEventListener<Map<Integer, Stri
         }catch (LFBusinessException e){
             throw new LFBusinessException("数据库更新失败");
         }
-
     }
 }

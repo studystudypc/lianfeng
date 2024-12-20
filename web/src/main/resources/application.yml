@@ -3,9 +3,14 @@ server:
 
 spring:
   datasource:
+#    sourceTableName:
     url: jdbc:mysql://127.0.0.1:3306/lianfeng?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&allowMultiQueries=true
     username: root
     password: 123456
+#    targetTableName:
+#      url: jdbc:mysql://127.0.0.1:3306/lianfeng?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&allowMultiQueries=true
+#      username: root
+#      password: 123456
     #指定数据库驱动
     driver-class-name: com.mysql.cj.jdbc.Driver
     #数据库类型
