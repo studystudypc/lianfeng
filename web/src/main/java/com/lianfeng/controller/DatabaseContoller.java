@@ -56,6 +56,7 @@ public class DatabaseContoller {
 
     }
 
+
     @ApiOperation(
             value = "比较数据库结构",
             notes = "比较两个数据库（源数据库和目标数据库）中某个数据表的结构是否相同," +

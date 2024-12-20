@@ -114,26 +114,27 @@ public class ExcelUtils {
                     Iterator<Row> rowIterator = sheet.iterator();
                     while (rowIterator.hasNext()) {
                         Row row = rowIterator.next();
-                        if (row == null) continue;
+                        if (row == null || row.getPhysicalNumberOfCells() == 0) continue;
 
                         int firstCellNum = row.getFirstCellNum();
                         int lastCellNum = row.getLastCellNum();
-                        String[] cells = new String[lastCellNum - firstCellNum + firstCellNum]; // 修改这里，确保数组长度正确
+                        String[] cells = new String[lastCellNum]; // 计算数组大小
 
                         for (int cellNum = firstCellNum; cellNum < lastCellNum; cellNum++) {
                             Cell cell = row.getCell(cellNum);
                             String cellValue = getCellValue(cell);
-                            cells[cellNum] = cellValue; // 修改这里，确保索引正确
+                            cells[cellNum - firstCellNum] = cellValue; // 索引
                         }
                         list.add(cells);
                     }
                 }
             }
         } catch (IOException e) {
-            throw new LFBusinessException("不支持的文件格式或关闭失败");
+            throw new LFBusinessException("不支持的文件格式或文件读取失败：" + e.getMessage());
         }
         return list;
     }
+
 
 
     /**********************************private**********************************/

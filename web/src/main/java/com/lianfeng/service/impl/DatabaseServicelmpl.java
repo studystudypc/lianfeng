@@ -67,7 +67,22 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
         StringBuilder sql = new StringBuilder("REPLACE INTO ").append(name).append(" (");//有值的数据sql
 
         // 读取 Excel 文件
-        List<String[]> readExcelList = ExcelUtils.readExcel(file);
+        List<String[]> clearExcelList = ExcelUtils.readExcel(file);
+        // 把Excel文件空内容全部舍弃
+        List<String[]> readExcelList = new ArrayList<>();
+        for (String[] row : clearExcelList) {
+            boolean isEmpty = true;
+            for (String cell : row) {
+                if (cell != null && !cell.trim().isEmpty()) {
+                    isEmpty = false;
+                    break;
+                }
+            }
+            if (!isEmpty) {
+                readExcelList.add(row);
+            }
+        }
+
         databaseVo.setExcelContent(readExcelList);
         databaseVo.setNumExcel(readExcelList.size() - 1);
 
@@ -164,7 +179,6 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
             String[] handleHeaderName = headerList.toArray(new String[0]); // 已经处理的主键表头
 
             boolean isFirstCondition = true;
-            //拼接查询
             for (String header : handleHeaderName) {
                 String value = nullJsonMap.get(header);
                 if (value != null && !value.isEmpty()) {
@@ -176,8 +190,8 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
                     }
                 }
             }
+
             // 执行查询
-            //查询的结果
             List<Map<String, Object>> results = jdbcTemplate.queryForList(selectSql.toString());
             if (results.isEmpty()) {
                 // 构建插入语句
@@ -185,20 +199,17 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
                 for (String header : handleHeaderName) {
                     String value = nullJsonMap.get(header);
                     insertSql.append("'").append(value != null ? value.replace("'", "''") : "NULL").append("'");
-                    if (!header.equals(headerName[headerName.length - 1])) {
+                    if (!header.equals(handleHeaderName[handleHeaderName.length - 1])) {
                         insertSql.append(", ");
                     }
                 }
                 insertSql.append(");");
-                //插入语句
                 jdbcTemplate.update(insertSql.toString());
                 num++;
             } else {
                 // 构建更新语句
-                // 获取查询结果中的第一个记录的dict_id值
                 Map<String, Object> result = results.get(0);
                 String dictIdValue = result.get(idName).toString();
-                // 构建更新语句
                 StringBuilder updateSql = new StringBuilder("UPDATE ").append(name).append(" SET ");
                 for (int i = 0; i < handleHeaderName.length; i++) {
                     if (i > 0) {
@@ -208,7 +219,6 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
                     updateSql.append(handleHeaderName[i]).append(" = '").append(value != null ? value.replace("'", "''") : "").append('\'');
                 }
                 updateSql.append(" WHERE ").append(idName).append(" = '").append(dictIdValue.replace("'", "''")).append('\'');
-                // 执行更新语句
                 jdbcTemplate.execute(updateSql.toString());
                 num++;
             }
