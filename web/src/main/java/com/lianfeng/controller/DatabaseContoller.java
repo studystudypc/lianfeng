@@ -1,32 +1,15 @@
 package com.lianfeng.controller;
 
-import com.alibaba.excel.EasyExcel;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.lianfeng.common.exception.LFBusinessException;
 import com.lianfeng.common.response.R;
-import com.lianfeng.constans.DictConstants;
-import com.lianfeng.listenner.NoModelDataListener;
-import com.lianfeng.mapper.DatabaseMapper;
 import com.lianfeng.service.IDatabaseService;
-import com.lianfeng.service.IDictService;
+import com.lianfeng.vo.CompareDBVo;
 import com.lianfeng.vo.DatabaseVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 
 @Api(tags = "系统模块")
@@ -53,8 +36,24 @@ public class DatabaseContoller {
         }
         DatabaseVo databaseVo = iDatabaseService.uploadExcel(file,name,idName);
         return R.data(databaseVo);
-
     }
+
+/*    @ApiOperation(
+            value = "文件上传接口，",
+            notes = "" ,
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("updateExcel")
+    public R<DatabaseVo> updateExcel(@RequestPart("file")  MultipartFile file,) {
+        if (file.isEmpty() || name.isEmpty()){
+            return R.fail("文件上传为空或文件名字为空");
+        }
+        DatabaseVo databaseVo = iDatabaseService.uploadExcel(file,name,idName);
+
+        return R.data(databaseVo);
+    }*/
+
 
 
     @ApiOperation(
@@ -66,10 +65,25 @@ public class DatabaseContoller {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     @PostMapping("compareDB")
-    public R compareDB(@RequestBody String sourceTableName, String targetTableName){
-//        iDatabaseService.compareDB(sourceTableName,targetTableName);
-        return R.success("数据结构相同");
+    public R<CompareDBVo> compareDB(MultipartFile sourceFile, MultipartFile targetFile, String sourceTableName, String targetTableName){
+        CompareDBVo compareDBVo = iDatabaseService.compareDB(sourceFile,targetFile,sourceTableName,targetTableName);
+
+        return R.data(compareDBVo);
     }
 
+    @ApiOperation(
+            value = "返回字段",
+            notes = "返回Excel表头字段",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @PostMapping("returnReverso")
+    public R<DatabaseVo> returnReverso(@RequestPart("file")  MultipartFile file){
+        if (file.isEmpty() ){
+            return R.fail("文件上传为空或文件名字为空");
+        }
 
+        DatabaseVo databaseVo = iDatabaseService.returnReverso(file);
+        return R.data(databaseVo);
+    }
 }

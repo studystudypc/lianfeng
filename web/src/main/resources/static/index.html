@@ -41,43 +41,16 @@
             padding: 8px;
             margin-top: 5px;
         }
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
         .message {
             margin-top: 20px;
             text-align: center;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        table, th, td {
-            border: 1px solid #ddd;
-        }
-        th, td {
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
         }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="upload-container">
-        <h2>上传和展示文件</h2>
+        <h2>上传和对比文件</h2>
         <form id="uploadForm">
             <div class="form-group">
                 <label for="file">选择文件：</label>
@@ -86,84 +59,82 @@
             <div class="form-group">
                 <label for="name">数据库表名：</label>
                 <input type="text" id="name" name="name" placeholder="请输入表名" required>
-                <label for="idName">主键字段名：</label>
-                <input type="text" id="idName" name="idName" placeholder="请输入主键字段名" required>
             </div>
-            <button type="submit">上传文件</button>
+            <div class="form-group">
+                <label for="tableOptions">字段选项：</label>
+                <select id="tableOptions" name="tableOptions">
+                    <option value="">加载中...</option>
+                </select>
+            </div>
         </form>
-        <div class="message" id="message"></div>
-        <div class="summary" id="summary" style="display:none;">
-            <p>Excel 数据: <span id="numExcel"></span></p>
-            <p>主键有效值数: <span id="numValue"></span></p>
-            <p>主键空值数: <span id="nullValue"></span></p>
-            <p>插入到数据库总计数: <span id="sumNums"></span></p>
-        </div>
-        <table id="excelTable" style="display:none;">
-            <p>Excel文件内容：</p>
-            <thead id="excelTableHead"></thead>
-            <tbody id="excelTableBody"></tbody>
-        </table>
     </div>
 </div>
 <script>
-    const form = document.getElementById('uploadForm');
-    const fileInput = document.getElementById('file');
-    const nameInput = document.getElementById('name');
-    const idNameInput = document.getElementById('idName');
-    const messageDiv = document.getElementById('message');
-    const summaryDiv = document.getElementById('summary');
-    const numExcel = document.getElementById('numExcel');
-    const numValue = document.getElementById('numValue');
-    const nullValue = document.getElementById('nullValue');
-    const sumNums = document.getElementById('sumNums');
-    const excelTable = document.getElementById('excelTable');
-    const excelTableHead = document.getElementById('excelTableHead');
-    const excelTableBody = document.getElementById('excelTableBody');
+    const tableOptions = document.getElementById('tableOptions');
 
-    form.addEventListener('submit', function(event) {
-        event.preventDefault();
+    // 动态加载下拉框选项
+    // 动态加载下拉框选项
+    function loadTableOptions() {
+        fetch('dict/returnReverso') // 替换为后端实际的接口地址
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.code=== 200 &&data.data && Array.isArray(data.data.reversoName)) {
+                    // 清空现有选项
+                    tableOptions.innerHTML = '';
+                    // 根据返回的数据生成选项
+                    data.data.reversoName.forEach(field => {
+                        const option = document.createElement('option');
+                        option.value = field; // 设置选项值
+                        option.textContent = field; // 设置选项显示内容
+                        tableOptions.appendChild(option);
+                    });
+                } else {
+                    tableOptions.innerHTML = '<option value="">未加载字段</option>';
+                }
+            })
+            .catch(error => {
+                console.error('加载字段出错:', error);
+                tableOptions.innerHTML = '<option value="">加载失败</option>';
+            });
+    }
+
+    // 页面加载时获取字段数据
+    document.addEventListener('DOMContentLoaded', loadTableOptions);
+
+    // 文件选择后自动上传
+    const fileInput = document.getElementById('file');
+    fileInput.addEventListener('change', function () {
+        if (!fileInput.files.length) {
+            alert('请选择文件');
+            return;
+        }
+
+        const nameInput = document.getElementById('name');
+        if (tableOptions.value) {
+            nameInput.value = tableOptions.value; // 设置表名为选中的字段
+        }
 
         const formData = new FormData();
         formData.append('file', fileInput.files[0]);
         formData.append('name', nameInput.value);
-        formData.append('idName', idNameInput.value);
 
-        fetch('dict/uploadExcel', {
+        fetch('dict/returnReverso', {
             method: 'POST',
             body: formData
         })
             .then(response => response.json())
             .then(data => {
                 if (data && data.code === 200) {
-                    messageDiv.textContent = data.message;
-                    messageDiv.style.color = 'green';
-                    displaySummary(data.data);
-                    displayExcelContent(data.data.excelContent);
+                    alert(data.message);
                 } else {
-                    messageDiv.textContent = '错误: ' + (data.message || '未知错误');
-                    messageDiv.style.color = 'red';
+                    alert('错误: ' + (data.message || '未知错误'));
                 }
             })
             .catch(error => {
-                messageDiv.textContent = '发生错误，请稍后重试。';
-                messageDiv.style.color = 'red';
+                alert('发生错误，请稍后重试。');
                 console.error(error);
             });
     });
-
-    function displaySummary(data) {
-        numExcel.textContent = data.numExcel;
-        numValue.textContent = data.numValue;
-        nullValue.textContent = data.nullValue;
-        sumNums.textContent = data.sumNums;
-        summaryDiv.style.display = 'block';
-    }
-
-    function displayExcelContent(content) {
-        excelTableHead.innerHTML = '<tr>' + content[0].map(header => `<th>${header}</th>`).join('') + '</tr>';
-        excelTableBody.innerHTML = content.slice(1).map(row => '<tr>' + row.map(cell => `<td>${cell || ''}</td>`).join('') + '</tr>').join('');
-        excelTable.style.display = 'table';
-    }
 </script>
 </body>
 </html>

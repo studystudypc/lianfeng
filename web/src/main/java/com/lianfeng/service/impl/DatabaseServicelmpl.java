@@ -1,16 +1,13 @@
 package com.lianfeng.service.impl;
 
-import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.google.gson.Gson;
 import com.lianfeng.common.exception.LFBusinessException;
 import com.lianfeng.common.utils.ExcelUtils;
 import com.lianfeng.constans.DictConstants;
-import com.lianfeng.listenner.NoModelDataListener;
 import com.lianfeng.mapper.DatabaseMapper;
 import com.lianfeng.service.IDatabaseService;
+import com.lianfeng.vo.CompareDBVo;
 import com.lianfeng.vo.DatabaseVo;
-import jdk.nashorn.internal.objects.NativeNumber;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -36,25 +33,16 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-//    @Autowired
-//    private SourceConfiguration sourceConfiguration;//源数据库配置
-//
-//    @Autowired
-//    private TargetConfiguration targetConfiguration;//目标数据库配置
 
 
     /**
      * @return 绝对路径名字
      * @Author liuchuanping
      * @Description
-     * 1.上传到本地
-     * 2.读取Excel文件内容
-     * 3.把Excel文件内容转为Map格式，
-     * 默认Excel表中第一个数据为K，其它值为v
-     * <p>
-     * 4.存入数据库对应的数据库中
+     * 上传文件到本地，并存入到数据库
      * @Date 2024-12-17 13:53
      * @Param file
+     * @return DatabaseVo
      **/
     @Transactional
     public DatabaseVo uploadExcel(MultipartFile file, String name, String idName) {
@@ -161,6 +149,62 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
     }
 
     /**
+     * @Author liuchuaning
+     * @Description
+     *
+     * 源数据库和目标数据库
+     *
+     *
+     * @Date 2024-12-20 14:46
+     * @Param sourceFile
+     * @param targetFile
+     * @param sourceTableName
+     * @param targetTableName
+     * @return CompareDBVo
+     **/
+    @Override
+    public CompareDBVo compareDB(MultipartFile sourceFile, MultipartFile targetFile, String sourceTableName, String targetTableName) {
+        return null;
+    }
+
+    /**
+     * @Author liuchuaning
+     * @Description 从文件读表头
+     * @Date 2024-12-21 10:06
+     * @Param file
+     * @return 表头
+     **/
+    @Override
+    public DatabaseVo returnReverso(MultipartFile file) {
+        DatabaseVo databaseVo = new DatabaseVo();
+        List<String[]> readExcelList = ExcelUtils.readExcel(file);
+        String[] headerName = readExcelList.get(0);
+        databaseVo.setReversoName(headerName);
+        return databaseVo;
+    }
+
+    /**********************************private**********************************/
+
+    private List<Map<String, Object>> fetchTableData(Connection connection, String tableName) throws SQLException {
+        List<Map<String, Object>> tableData = new ArrayList<>();
+        String query = "SELECT * FROM " + tableName;
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(query)) {
+            while (resultSet.next()) {
+                Map<String, Object> row = new HashMap<>();
+                int columnCount = resultSet.getMetaData().getColumnCount();
+                for (int i = 1; i <= columnCount; i++) {
+                    String columnName = resultSet.getMetaData().getColumnName(i);
+                    Object columnValue = resultSet.getObject(i);
+                    row.put(columnName, columnValue);
+                }
+                tableData.add(row);
+            }
+        }
+        return tableData;
+    }
+
+    /**
      * 处理json主键为空的字段
      *
      * @param name
@@ -225,62 +269,6 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
         }
         return num;
     }
-
-
-//
-//    /**
-//     * @Author liuchuanping
-//     * @Description
-//     * 比较数据库结构
-//     * 获取源 sql 文件的表字段信息
-//     * 获取目标 sql 文件的表字段信息
-//     * 比较两个 sql 文件的字段信息
-//     * @Date 2024-12-19 10:48
-//     * @Param sourceTableName
-//     * @param targetTableName
-//     * @return
-//     **/
-//    @Override
-//    public void compareDB(String sourceTableName, String targetTableName) {
-//        try {
-//            Connection connection = sourceConfiguration.getConnection();
-//            List<Map<String, Object>> sourceData = fetchTableData(connection,sourceTableName);
-//
-//            System.out.println(sourceData);
-//        } catch (SQLException e) {
-//            throw new LFBusinessException("数据库连接异常");
-//        }
-//
-//        try {
-//            Connection connection = targetConfiguration.getConnection();
-//            List<Map<String, Object>> targetData = fetchTableData(connection,targetTableName);
-//            System.out.println(targetData);
-//        } catch (SQLException e) {
-//            throw new LFBusinessException("数据库连接异常");
-//        }
-//    }
-
-
-    private List<Map<String, Object>> fetchTableData(Connection connection, String tableName) throws SQLException {
-        List<Map<String, Object>> tableData = new ArrayList<>();
-        String query = "SELECT * FROM " + tableName;
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(query)) {
-            while (resultSet.next()) {
-                Map<String, Object> row = new HashMap<>();
-                int columnCount = resultSet.getMetaData().getColumnCount();
-                for (int i = 1; i <= columnCount; i++) {
-                    String columnName = resultSet.getMetaData().getColumnName(i);
-                    Object columnValue = resultSet.getObject(i);
-                    row.put(columnName, columnValue);
-                }
-                tableData.add(row);
-            }
-        }
-        return tableData;
-    }
-
-    /**********************************private**********************************/
 
     /**
      * 判断系统

@@ -45,4 +45,9 @@ public class DatabaseVo {
      */
     private Integer sumNums;
 
+    /**
+     * Excel表头
+     */
+    private String[] reversoName;
+
 }

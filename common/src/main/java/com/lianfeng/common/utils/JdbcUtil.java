@@ -1,71 +1,65 @@
 package com.lianfeng.common.utils;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 public class JdbcUtil {
 
-    private static final String URL = "jdbc:mysql://127.0.0.1:3306/lianfeng?useSSL=false&serverTimezone=UTC";
-    private static final String USER = "root";
-    private static final String PASSWORD = "123456";
+    // JDBC驱动名及数据库URL
+    private static final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";  
 
-
-    static {
+    static {  
         try {
-            // 加载数据库驱动
-            Class.forName("com.mysql.cj.jdbc.Driver");
+            Class.forName(JDBC_DRIVER);  
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
 
     /**
-     * 获取数据库连接
+     * 连接Mysql
+     * @param url
+     * @param username
+     * @param password
+     * @return
      */
-    public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASSWORD);
+    public static Connection getConnection(String url,String username,String password) {
+        Connection connection = null;
+        try {
+            //1、注册JDBC驱动
+            Class.forName(JDBC_DRIVER);
+            /* 2、获取数据库连接 */
+            connection = DriverManager.getConnection(url,username,password);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return connection;
     }
 
-    /**
-     * 执行查询并返回结果列表
-     */
-    public static <T> List<T> query(String sql, ResultSetHandler<T> resultSetHandler) {
-        List<T> resultList = new ArrayList<>();
-        try (Connection conn = getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+    /*关闭结果集、数据库操作对象、数据库连接*/
+    public static void release(Connection connection, PreparedStatement preparedStatement, ResultSet resultSet) {
 
-            while (rs.next()) {
-                resultList.add(resultSetHandler.handle(rs));
+        if(resultSet!=null) {
+            try {
+                resultSet.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
-        return resultList;
-    }
-
-    /**
-     * 执行更新操作
-     */
-    public static int update(String sql) {
-        int result = 0;
-        try (Connection conn = getConnection();
-             Statement stmt = conn.createStatement()) {
-            result = stmt.executeUpdate(sql);
-        } catch (SQLException e) {
-            e.printStackTrace();
+        if(preparedStatement!=null) {
+            try {
+                preparedStatement.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
-        return result;
-    }
-
-    /**
-     * 结果集处理器接口
-     */
-    public interface ResultSetHandler<T> {
-        T handle(ResultSet rs) throws SQLException;
+        if(connection!=null) {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
