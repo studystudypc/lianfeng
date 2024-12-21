@@ -2,6 +2,7 @@ package com.lianfeng.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.lianfeng.model.entity.DbConnectionInfo;
+import com.lianfeng.vo.DbConnectionInfoVo;
 
 /**
 * @author LCP
@@ -10,4 +11,9 @@ import com.lianfeng.model.entity.DbConnectionInfo;
 */
 public interface IDbConnectionInfoService extends IService<DbConnectionInfo> {
 
+    /**
+     * 保存或更新数据库源信息
+     * @param dbConnectionInfoVo
+     */
+    void saveOrUpdateApartment(DbConnectionInfoVo dbConnectionInfoVo);
 }

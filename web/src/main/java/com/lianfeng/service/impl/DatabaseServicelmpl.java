@@ -7,7 +7,7 @@ import com.lianfeng.constans.DictConstants;
 import com.lianfeng.mapper.DatabaseMapper;
 import com.lianfeng.service.IDatabaseService;
 import com.lianfeng.vo.CompareDBVo;
-import com.lianfeng.vo.DatabaseVo;
+import com.lianfeng.po.DatabasePo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -45,12 +45,12 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
      * @return DatabaseVo
      **/
     @Transactional
-    public DatabaseVo uploadExcel(MultipartFile file, String name, String idName) {
+    public DatabasePo uploadExcel(MultipartFile file, String name, String idName) {
 
-        DatabaseVo databaseVo = new DatabaseVo();//返回的数据值
+        DatabasePo databasePo = new DatabasePo();//返回的数据值
 
         String absolutePath = uploadFileToLocal(file.getOriginalFilename(), file);
-        databaseVo.setAbsolutePath(absolutePath);
+        databasePo.setAbsolutePath(absolutePath);
 
         StringBuilder sql = new StringBuilder("REPLACE INTO ").append(name).append(" (");//有值的数据sql
 
@@ -71,8 +71,8 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
             }
         }
 
-        databaseVo.setExcelContent(readExcelList);
-        databaseVo.setNumExcel(readExcelList.size() - 1);
+        databasePo.setExcelContent(readExcelList);
+        databasePo.setNumExcel(readExcelList.size() - 1);
 
         List<Map<String, String>> nullIdName = new ArrayList<>();  // 存放主键为空的数据
         List<Map<String, String>> jsonList = new ArrayList<>();    // 存放有效的数据
@@ -139,13 +139,13 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
         //插入存在主键的数据，使用的是批量插入
 //        jdbcTemplate.execute(sql.toString());
         int update = jdbcTemplate.update(sql.toString());
-        databaseVo.setNumValue(update);
+        databasePo.setNumValue(update);
         Integer nullNum = handleNullJson(name, idName, headerName, nullIdName);
-        databaseVo.setNullValue(nullNum);
-        Integer numValue = databaseVo.getNumValue();
-        databaseVo.setSumNums(nullNum+numValue);
+        databasePo.setNullValue(nullNum);
+        Integer numValue = databasePo.getNumValue();
+        databasePo.setSumNums(nullNum+numValue);
 
-        return databaseVo;
+        return databasePo;
     }
 
     /**
@@ -175,12 +175,12 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
      * @return 表头
      **/
     @Override
-    public DatabaseVo returnReverso(MultipartFile file) {
-        DatabaseVo databaseVo = new DatabaseVo();
+    public DatabasePo returnReverso(MultipartFile file) {
+        DatabasePo databasePo = new DatabasePo();
         List<String[]> readExcelList = ExcelUtils.readExcel(file);
         String[] headerName = readExcelList.get(0);
-        databaseVo.setReversoName(headerName);
-        return databaseVo;
+        databasePo.setReversoName(headerName);
+        return databasePo;
     }
 
     /**********************************private**********************************/

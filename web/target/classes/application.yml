@@ -1,0 +1,62 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+#    sourceTableName:
+    url: jdbc:mysql://127.0.0.1:3306/lianfeng?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&allowMultiQueries=true
+    username: root
+    password: 123456
+#    targetTableName:
+#      url: jdbc:mysql://127.0.0.1:3306/lianfeng?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&allowMultiQueries=true
+#      username: root
+#      password: 123456
+    #指定数据库驱动
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    #数据库类型
+    platform: mysql
+
+    hikari:
+      connection-test-query: SELECT 1 # 自动检测连接
+      connection-timeout: 60000 #数据库连接超时时间,默认30秒
+      idle-timeout: 500000 #空闲连接存活最大时间，默认600000（10分钟）
+      max-lifetime: 540000 #此属性控制池中连接的最长生命周期，值0表示无限生命周期，默认1800000即30分钟
+      maximum-pool-size: 12 #连接池最大连接数，默认是10
+      minimum-idle: 10 #最小空闲连接数量
+      pool-name: SPHHikariPool # 连接池名称
+  jackson:
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      database: 0
+
+#用于打印框架生成的sql语句，便于调试
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      logic-delete-field: is_deleted # 全局逻辑删除的实体字段名(配置后可以忽略不配置步骤二)
+      logic-delete-value: 1 # 逻辑已删除值(默认为 1)
+      logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
+
+
+springdoc:
+  default-flat-param-object: true
+
+
+#swagger2:
+#  show: true
+#  group-name: ${spring.application.name}
+#  base-package: com.lianfeng
+#  title: lianfeng-server docs
+#  description: lianfeng-server docs
+#  terms-of-service-url: http://127.0.0.1:${server.port}
+#  contact-name: lcp
+#  contact-url: https://check.maokuaiji.com
+#  contact-email: 1101637245@QQ.COM
+#  version: 1.0

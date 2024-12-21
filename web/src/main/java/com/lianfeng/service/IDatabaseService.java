@@ -2,7 +2,7 @@ package com.lianfeng.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.lianfeng.vo.CompareDBVo;
-import com.lianfeng.vo.DatabaseVo;
+import com.lianfeng.po.DatabasePo;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface IDatabaseService extends IService<Object> {
@@ -13,7 +13,7 @@ public interface IDatabaseService extends IService<Object> {
      * @param name
      * @return
      */
-    DatabaseVo uploadExcel(MultipartFile file, String name, String idName);
+    DatabasePo uploadExcel(MultipartFile file, String name, String idName);
 
     /**
      * 比较数据库结构
@@ -30,5 +30,5 @@ public interface IDatabaseService extends IService<Object> {
      * @param file
      * @return
      */
-    DatabaseVo returnReverso(MultipartFile file);
+    DatabasePo returnReverso(MultipartFile file);
 }

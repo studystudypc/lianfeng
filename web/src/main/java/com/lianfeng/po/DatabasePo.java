@@ -1,4 +1,4 @@
-package com.lianfeng.vo;
+package com.lianfeng.po;
 
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
@@ -13,7 +13,7 @@ import java.util.List;
  */
 @Data
 @ApiModel(value = "Database参数")
-public class DatabaseVo {
+public class DatabasePo {
 
     /**
      * 文件路径

@@ -1,7 +1,10 @@
 package com.lianfeng.controller;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.lianfeng.common.response.R;
 import com.lianfeng.model.entity.DbConnectionInfo;
+import com.lianfeng.po.DbConnectionInfoPo;
 import com.lianfeng.service.IDbConnectionInfoService;
 import com.lianfeng.vo.DbConnectionInfoVo;
 import io.swagger.annotations.Api;
@@ -35,16 +38,26 @@ public class DbConnectionInfoContoller {
     }
 
     @ApiOperation(
-            value = "修改并保存数据库源信息",
-            notes = "修改并保存数据库源信息",
+            value = "保存或更新数据库源信息",
+            notes = "保存或更新数据库源信息",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     @PostMapping("update")
-    public R update(@RequestBody DbConnectionInfo dbConnectionInfo) {
-        iDbConnectionInfoService.update();
+    public R update(@RequestBody DbConnectionInfoVo dbConnectionInfoVo) {
+
+        iDbConnectionInfoService.saveOrUpdateApartment(dbConnectionInfoVo);
         return R.success();
     }
+/*
+    @ApiOperation(
+            value = "对比表结构",
+            notes = "对比表结构",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @PostMapping("compareTable")
+    */
 
 
 

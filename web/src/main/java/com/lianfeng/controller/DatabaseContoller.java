@@ -3,7 +3,7 @@ package com.lianfeng.controller;
 import com.lianfeng.common.response.R;
 import com.lianfeng.service.IDatabaseService;
 import com.lianfeng.vo.CompareDBVo;
-import com.lianfeng.vo.DatabaseVo;
+import com.lianfeng.po.DatabasePo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,12 +30,12 @@ public class DatabaseContoller {
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
     @PostMapping("uploadExcel")
-    public R<DatabaseVo> uploadExcel(@RequestPart("file")  MultipartFile file, @RequestParam("name") String name,@RequestParam("idName") String idName) {
+    public R<DatabasePo> uploadExcel(@RequestPart("file")  MultipartFile file, @RequestParam("name") String name, @RequestParam("idName") String idName) {
         if (file.isEmpty() || name.isEmpty()){
             return R.fail("文件上传为空或文件名字为空");
         }
-        DatabaseVo databaseVo = iDatabaseService.uploadExcel(file,name,idName);
-        return R.data(databaseVo);
+        DatabasePo databasePo = iDatabaseService.uploadExcel(file,name,idName);
+        return R.data(databasePo);
     }
 
 /*    @ApiOperation(
@@ -78,12 +78,12 @@ public class DatabaseContoller {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     @PostMapping("returnReverso")
-    public R<DatabaseVo> returnReverso(@RequestPart("file")  MultipartFile file){
+    public R<DatabasePo> returnReverso(@RequestPart("file")  MultipartFile file){
         if (file.isEmpty() ){
             return R.fail("文件上传为空或文件名字为空");
         }
 
-        DatabaseVo databaseVo = iDatabaseService.returnReverso(file);
-        return R.data(databaseVo);
+        DatabasePo databasePo = iDatabaseService.returnReverso(file);
+        return R.data(databasePo);
     }
 }
