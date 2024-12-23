@@ -2,7 +2,10 @@ package com.lianfeng.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.lianfeng.model.entity.DbConnectionInfo;
+import com.lianfeng.po.CompareTablePo;
 import com.lianfeng.vo.DbConnectionInfoVo;
+
+import java.sql.SQLException;
 
 /**
 * @author LCP
@@ -16,4 +19,10 @@ public interface IDbConnectionInfoService extends IService<DbConnectionInfo> {
      * @param dbConnectionInfoVo
      */
     void saveOrUpdateApartment(DbConnectionInfoVo dbConnectionInfoVo);
+
+    /**
+     * 对比表的数据
+     * @return
+     */
+    CompareTablePo compareTable(String table) throws SQLException;
 }

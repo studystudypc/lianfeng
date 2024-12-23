@@ -11,6 +11,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.naming.Name;
+
 
 @Api(tags = "系统模块")
 @RequestMapping("dict")
@@ -38,52 +40,38 @@ public class DatabaseContoller {
         return R.data(databasePo);
     }
 
-/*    @ApiOperation(
-            value = "文件上传接口，",
-            notes = "" ,
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
-    )
-    @PostMapping("updateExcel")
-    public R<DatabaseVo> updateExcel(@RequestPart("file")  MultipartFile file,) {
-        if (file.isEmpty() || name.isEmpty()){
-            return R.fail("文件上传为空或文件名字为空");
-        }
-        DatabaseVo databaseVo = iDatabaseService.uploadExcel(file,name,idName);
-
-        return R.data(databaseVo);
-    }*/
-
-
-
-    @ApiOperation(
-            value = "比较数据库结构",
-            notes = "比较两个数据库（源数据库和目标数据库）中某个数据表的结构是否相同," +
-                    "sourceTableName = 源数据库某表名字，" +
-                    "targetTableName = 目标数据库某表名字",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    @PostMapping("compareDB")
-    public R<CompareDBVo> compareDB(MultipartFile sourceFile, MultipartFile targetFile, String sourceTableName, String targetTableName){
-        CompareDBVo compareDBVo = iDatabaseService.compareDB(sourceFile,targetFile,sourceTableName,targetTableName);
-
-        return R.data(compareDBVo);
-    }
-
     @ApiOperation(
             value = "返回字段",
             notes = "返回Excel表头字段",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    @PostMapping("returnReverso")
+    @PostMapping("returnRever")
     public R<DatabasePo> returnReverso(@RequestPart("file")  MultipartFile file){
         if (file.isEmpty() ){
             return R.fail("文件上传为空或文件名字为空");
         }
-
         DatabasePo databasePo = iDatabaseService.returnReverso(file);
         return R.data(databasePo);
     }
+
+    @ApiOperation(
+            value = "多字段更新",
+            notes = "多字段更新",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @PostMapping("updateField")
+    public R<DatabasePo> updateField(@RequestPart("file")  MultipartFile file, String tableName,String priName, String ... field){
+        if (file.isEmpty() ){
+            return R.fail("文件上传为空或文件名字为空");
+        }
+
+
+        DatabasePo databasePo = iDatabaseService.updateExcel(file,tableName,priName,field);
+        return R.data(databasePo);
+    }
+
+
+
 }

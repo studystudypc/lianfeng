@@ -23,7 +23,6 @@ public interface IDatabaseService extends IService<Object> {
      * @param targetTableName
      * @return
      */
-    CompareDBVo compareDB(MultipartFile sourceFile, MultipartFile targetFile, String sourceTableName, String targetTableName);
 
     /**
      * 返回字段
@@ -31,4 +30,6 @@ public interface IDatabaseService extends IService<Object> {
      * @return
      */
     DatabasePo returnReverso(MultipartFile file);
+
+    DatabasePo updateExcel(MultipartFile file, String tableName,String priName,String[] field);
 }

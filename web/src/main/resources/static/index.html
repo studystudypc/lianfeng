@@ -72,20 +72,21 @@
 <script>
     const tableOptions = document.getElementById('tableOptions');
 
-    // 动态加载下拉框选项
-    // 动态加载下拉框选项
     function loadTableOptions() {
-        fetch('dict/returnReverso') // 替换为后端实际的接口地址
+        fetch('dict/returnReverse', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
             .then(response => response.json())
             .then(data => {
-                if (data && data.code=== 200 &&data.data && Array.isArray(data.data.reversoName)) {
-                    // 清空现有选项
+                if (data && data.code === 200 && data.data && Array.isArray(data.data.reversoName)) {
                     tableOptions.innerHTML = '';
-                    // 根据返回的数据生成选项
                     data.data.reversoName.forEach(field => {
                         const option = document.createElement('option');
-                        option.value = field; // 设置选项值
-                        option.textContent = field; // 设置选项显示内容
+                        option.value = field;
+                        option.textContent = field;
                         tableOptions.appendChild(option);
                     });
                 } else {
@@ -98,10 +99,8 @@
             });
     }
 
-    // 页面加载时获取字段数据
     document.addEventListener('DOMContentLoaded', loadTableOptions);
 
-    // 文件选择后自动上传
     const fileInput = document.getElementById('file');
     fileInput.addEventListener('change', function () {
         if (!fileInput.files.length) {
@@ -110,22 +109,24 @@
         }
 
         const nameInput = document.getElementById('name');
-        if (tableOptions.value) {
-            nameInput.value = tableOptions.value; // 设置表名为选中的字段
-        }
-
         const formData = new FormData();
         formData.append('file', fileInput.files[0]);
-        formData.append('name', nameInput.value);
 
-        fetch('dict/returnReverso', {
+        fetch('dict/returnRever', {
             method: 'POST',
             body: formData
         })
             .then(response => response.json())
             .then(data => {
-                if (data && data.code === 200) {
-                    alert(data.message);
+                if (data && data.code === 200 && data.data && Array.isArray(data.data.reversoName)) {
+                    tableOptions.innerHTML = '';
+                    data.data.reversoName.forEach(field => {
+                        const option = document.createElement('option');
+                        option.value = field;
+                        option.textContent = field;
+                        tableOptions.appendChild(option);
+                    });
+                    alert(data.message || '上传成功');
                 } else {
                     alert('错误: ' + (data.message || '未知错误'));
                 }
@@ -138,3 +139,4 @@
 </script>
 </body>
 </html>
+

@@ -50,4 +50,9 @@ public class DatabasePo {
      */
     private String[] reversoName;
 
+    /**
+     * 存放读取空excel文件内容
+     */
+    private List<String[]> nullExcelContent;
+
 }
