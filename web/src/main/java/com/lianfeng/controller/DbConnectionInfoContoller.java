@@ -53,15 +53,18 @@ public class DbConnectionInfoContoller {
 
     @ApiOperation(
             value = "对比表结构",
-            notes = "对比表结构",
+            notes = "对比表结构" +
+                    "tableName = 表名",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     @GetMapping("compareTable")
     public R compareTable(@RequestParam String tableName) throws SQLException {
         CompareTablePo compareTablePo = iDbConnectionInfoService.compareTable(tableName);
-        return R.data(compareTablePo);
+        if (compareTablePo.getDifferencesList() != null){
+            return R.data(compareTablePo);
+        }
+        return R.success("表结构相同");
     }
-
 
 }

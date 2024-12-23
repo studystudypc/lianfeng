@@ -11,7 +11,12 @@ public interface DictConstants {
     /**
      * 文件路径
      */
-    String DICT_PATH  = "file/path/dict";
+    String DICT_PATH  = "file/path";
+
+    /**
+     * 日志文件路径
+     */
+    String LOG_PATH = "file/logs";
 
     /**
      * .xls

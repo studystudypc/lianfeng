@@ -11,9 +11,10 @@ import java.util.Date;
 
 /**
  * 数据库常见表信息
+ *
  * @TableName example_table
  */
-@TableName(value ="example_table")
+@TableName(value = "example_table")
 @Data
 public class ExampleTable implements Serializable {
     /**
@@ -23,7 +24,12 @@ public class ExampleTable implements Serializable {
     private Integer id;
 
     /**
-     * 名称
+     * 表名
+     */
+    private String tableName;
+
+    /**
+     * 字段名字
      */
     private String dbField;
 
@@ -33,7 +39,7 @@ public class ExampleTable implements Serializable {
     private String dbType;
 
     /**
-     * 是否为空
+     * 字段是否为空
      */
     private String dbNull;
 
@@ -74,5 +80,4 @@ public class ExampleTable implements Serializable {
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
-
 }

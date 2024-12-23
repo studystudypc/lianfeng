@@ -155,13 +155,14 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
         DatabasePo databasePo = new DatabasePo();
         List<String[]> readExcelList = ExcelUtils.readExcel(file);
         String[] headerName = readExcelList.get(0);
+
         databasePo.setReversoName(headerName);
         return databasePo;
     }
 
     /**
      * @Author liuchuaning
-     * @Description //TODO a
+     * @Description 多字段更新
      * @Date 2024-12-22 14:11
      * @Param file
      * @param tableName

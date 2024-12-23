@@ -41,6 +41,18 @@
             padding: 8px;
             margin-top: 5px;
         }
+        .form-group button {
+            width: 100%;
+            padding: 8px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #0056b3;
+        }
         .message {
             margin-top: 20px;
             text-align: center;
@@ -61,82 +73,114 @@
                 <input type="text" id="name" name="name" placeholder="请输入表名" required>
             </div>
             <div class="form-group">
-                <label for="tableOptions">字段选项：</label>
-                <select id="tableOptions" name="tableOptions">
-                    <option value="">加载中...</option>
-                </select>
+                <label for="primaryKey">主键字段：</label>
+                <input type="text" id="primaryKey" name="idName" placeholder="请输入主键字段" required>
+            </div>
+            <div class="form-group">
+                <div id="selectFieldsContainer">
+                    <!-- 动态生成的下拉框将放在这个容器中 -->
+                </div>
+            </div>
+            <div class="form-group">
+                <button type="submit">提交表单</button>
             </div>
         </form>
     </div>
 </div>
-<script>
-    const tableOptions = document.getElementById('tableOptions');
 
-    function loadTableOptions() {
-        fetch('dict/returnReverse', {
+<script>
+    const selectFieldsContainer = document.getElementById('selectFieldsContainer');
+    const fileInput = document.getElementById('file');
+
+    // 选择文件时触发上传并加载字段数据
+    fileInput.addEventListener('change', function() {
+        const formData = new FormData(document.getElementById('uploadForm'));
+
+        // 在文件选择后立即触发文件上传请求
+        fetch('dict/returnRever', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            body: formData
         })
-            .then(response => response.json())
+            .then(response => response.json())  // 解析返回的 JSON 数据
             .then(data => {
+                console.log('返回数据:', data);  // 调试输出返回的数据
+
                 if (data && data.code === 200 && data.data && Array.isArray(data.data.reversoName)) {
-                    tableOptions.innerHTML = '';
-                    data.data.reversoName.forEach(field => {
-                        const option = document.createElement('option');
-                        option.value = field;
-                        option.textContent = field;
-                        tableOptions.appendChild(option);
+                    // 清空当前的下拉框容器
+                    selectFieldsContainer.innerHTML = '';
+
+                    // 获取 reversoName 列表
+                    const reversoNames = data.data.reversoName;
+
+                    // 循环根据字段数据生成下拉框
+                    reversoNames.forEach((field, i) => {
+                        const formGroup = document.createElement('div');
+                        formGroup.classList.add('form-group');
+
+                        // 创建标签
+                        const label = document.createElement('label');
+                        label.setAttribute('for', `tableOptions_${i}`);
+                        label.textContent = `字段 ${i + 1}：`;
+
+                        // 创建下拉框
+                        const select = document.createElement('select');
+                        select.id = `tableOptions_${i}`;
+                        select.name = `tableOptions_${i}`;
+
+                        // 添加一个 null 选项
+                        const nullOption = document.createElement('option');
+                        nullOption.value = '';
+                        nullOption.textContent = '请选择';
+                        select.appendChild(nullOption);
+
+                        // 添加字段选项
+                        reversoNames.forEach((field) => {
+                            const option = document.createElement('option');
+                            option.value = field;
+                            option.textContent = field;
+                            select.appendChild(option);
+                        });
+
+                        // 将标签和下拉框添加到表单组
+                        formGroup.appendChild(label);
+                        formGroup.appendChild(select);
+
+                        // 将表单组添加到容器
+                        selectFieldsContainer.appendChild(formGroup);
                     });
                 } else {
-                    tableOptions.innerHTML = '<option value="">未加载字段</option>';
+                    selectFieldsContainer.innerHTML = '<div>未加载字段</div>';
                 }
             })
             .catch(error => {
                 console.error('加载字段出错:', error);
-                tableOptions.innerHTML = '<option value="">加载失败</option>';
+                selectFieldsContainer.innerHTML = '<div>加载失败</div>';
             });
-    }
+    });
 
-    document.addEventListener('DOMContentLoaded', loadTableOptions);
+    // 阻止表单的默认提交行为并处理文件上传
+    document.getElementById('uploadForm').addEventListener('submit', function(event) {
+        event.preventDefault();  // 阻止表单默认提交
 
-    const fileInput = document.getElementById('file');
-    fileInput.addEventListener('change', function () {
-        if (!fileInput.files.length) {
-            alert('请选择文件');
-            return;
-        }
+        const formData = new FormData(this);
 
-        const nameInput = document.getElementById('name');
-        const formData = new FormData();
-        formData.append('file', fileInput.files[0]);
-
-        fetch('dict/returnRever', {
+        fetch('dict/updateField', {
             method: 'POST',
             body: formData
         })
             .then(response => response.json())
             .then(data => {
-                if (data && data.code === 200 && data.data && Array.isArray(data.data.reversoName)) {
-                    tableOptions.innerHTML = '';
-                    data.data.reversoName.forEach(field => {
-                        const option = document.createElement('option');
-                        option.value = field;
-                        option.textContent = field;
-                        tableOptions.appendChild(option);
-                    });
-                    alert(data.message || '上传成功');
+                if (data && data.code === 200) {
+                    alert('文件上传成功！');
                 } else {
-                    alert('错误: ' + (data.message || '未知错误'));
+                    alert('文件上传失败，请重试。');
                 }
             })
             .catch(error => {
-                alert('发生错误，请稍后重试。');
-                console.error(error);
+                console.error('上传失败:', error);
+                alert('文件上传失败，请重试。');
             });
     });
 </script>
 </body>
 </html>
-

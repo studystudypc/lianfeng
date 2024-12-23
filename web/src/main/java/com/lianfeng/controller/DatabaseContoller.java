@@ -57,7 +57,11 @@ public class DatabaseContoller {
 
     @ApiOperation(
             value = "多字段更新",
-            notes = "多字段更新",
+            notes = "多字段更新," +
+                    "file = 文件，" +
+                    "tableName = 表名，" +
+                    "priName = 主键名字，" +
+                    "field = 多字段",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
@@ -66,8 +70,6 @@ public class DatabaseContoller {
         if (file.isEmpty() ){
             return R.fail("文件上传为空或文件名字为空");
         }
-
-
         DatabasePo databasePo = iDatabaseService.updateExcel(file,tableName,priName,field);
         return R.data(databasePo);
     }
