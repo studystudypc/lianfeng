@@ -31,5 +31,5 @@ public interface IDatabaseService extends IService<Object> {
      */
     DatabasePo returnReverso(MultipartFile file);
 
-    DatabasePo updateExcel(MultipartFile file, String tableName,String priName,String[] field);
+    DatabasePo updateExcel(MultipartFile file,String priName,String[] keyName,String[] field);
 }

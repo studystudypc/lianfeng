@@ -1,5 +1,6 @@
 package com.lianfeng.service.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lianfeng.common.exception.LFBusinessException;
 import com.lianfeng.common.utils.ExcelUtils;
@@ -8,6 +9,7 @@ import com.lianfeng.mapper.DatabaseMapper;
 import com.lianfeng.service.IDatabaseService;
 import com.lianfeng.vo.CompareDBVo;
 import com.lianfeng.po.DatabasePo;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -34,12 +36,11 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
 
     /**
      * @return 绝对路径名字
+     * @return DatabaseVo
      * @Author liuchuanping
-     * @Description
-     * 上传文件到本地，并存入到数据库
+     * @Description 上传文件到本地，并存入到数据库
      * @Date 2024-12-17 13:53
      * @Param file
-     * @return DatabaseVo
      **/
     @Transactional
     public DatabasePo uploadExcel(MultipartFile file, String name, String idName) {
@@ -138,17 +139,17 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
         Integer nullNum = handleNullJson(name, idName, headerName, nullIdName);
         databasePo.setNullValue(nullNum);
         Integer numValue = databasePo.getNumValue();
-        databasePo.setSumNums(nullNum+numValue);
+        databasePo.setSumNums(nullNum + numValue);
 
         return databasePo;
     }
 
     /**
+     * @return 表头
      * @Author liuchuaning
      * @Description 从文件读表头
      * @Date 2024-12-21 10:06
      * @Param file
-     * @return 表头
      **/
     @Override
     public DatabasePo returnReverso(MultipartFile file) {
@@ -161,24 +162,24 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
     }
 
     /**
+     * @param tableName
+     * @param field
+     * @return DatabasePo
      * @Author liuchuaning
      * @Description 多字段更新
      * @Date 2024-12-22 14:11
      * @Param file
-     * @param tableName
-     * @param field
-     * @return DatabasePo
      **/
     @Override
-    public DatabasePo updateExcel(MultipartFile file, String tableName, String priName, String[] field) {
+    public DatabasePo updateExcel(MultipartFile file, String tableName, String[] keyName, String[] field) {
         DatabasePo databasePo = returnReverso(file);
         String[] reversoName = databasePo.getReversoName(); // 表头的名字
 
         // 读取 Excel 文件
         List<String[]> clearExcelList = ExcelUtils.readExcel(file);
-        databasePo.setExcelContent(clearExcelList);
         // 把Excel文件空内容全部清除
         List<String[]> readExcelList = new ArrayList<>();
+
         for (String[] row : clearExcelList) {
             boolean isEmpty = true;
             for (String cell : row) {
@@ -194,24 +195,33 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
 
         List<String> sqlList = new ArrayList<>(); // 存放完整的SQL语句
 
-        int index = -1;  // 主键列的索引
-        // 查找主键在表头中的位置
+        // 多主键列的索引
+        String[] keyIndex = new String[keyName.length];
         for (int i = 0; i < reversoName.length; i++) {
-            if (priName.equals(reversoName[i])) {
-                index = i;
-                break;
+            for (int j = 0; j < keyName.length; j++) {
+                if (reversoName[i].equals(keyName[j])) {
+                    keyIndex[j] = String.valueOf(i);
+                    break;
+                }
             }
         }
 
         // 如果找不到主键，抛出异常
-        if (index == -1) {
+        boolean flag = true;
+        for (String index : keyIndex) {
+            if (index != null && !index.isEmpty()) {
+                flag = false;
+                break;
+            }
+        }
+        if (flag) {
             throw new LFBusinessException("指定的 主键 未在表头中找到。");
         }
 
-        int[] indices = new int[field.length + 1]; // filed与reversoName对应的下标
+        int[] indices = new int[field.length]; // filed与reversoName对应的下标
 
-        // 初始化field
-        for (int i = 0; i < field.length + 1; i++) {
+        // 初始化field 字段值的索引
+        for (int i = 0; i < field.length; i++) {
             indices[i] = -1;
         }
         // 遍历reversoName数组，查找field中的元素对应的索引
@@ -223,67 +233,59 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
                 }
             }
         }
-        //处理主键的位置
-        for (int i = 0; i < reversoName.length; i++) {
-            if (reversoName[i].equals(priName)){
-                indices[indices.length -1] = i;
-            }
-        }
 
         List<String[]> nullExcelContent = new ArrayList<>(); // 存放空的主键值的行
 
-        //
-        for (int rowIndex = 0; rowIndex < readExcelList.size(); rowIndex++) {
-            String[] values = new String[field.length + 1];
-            for (int fieldIndex = 0; fieldIndex < indices.length; fieldIndex++) {
-                if (indices[fieldIndex] != -1) {
-                    values[fieldIndex] = readExcelList.get(rowIndex)[indices[fieldIndex]];
-                }
-            }
+        for (int rowIndex = 1; rowIndex < readExcelList.size(); rowIndex++) { // 循环每一个excel文件内容
+            String[] values = readExcelList.get(rowIndex);
+            boolean isAccountEmpty = values[Integer.parseInt(keyIndex[1])] == null || values[Integer.parseInt(keyIndex[1])].trim().isEmpty();
+            boolean isDictIdEmpty = values[Integer.parseInt(keyIndex[0])] == null || values[Integer.parseInt(keyIndex[0])].trim().isEmpty();
 
-            // 检查主键是否为空
-            if (values[indices.length - 1] == null || values[indices.length - 1].trim().isEmpty()) {
-                // 如果主键为空，则将整行数据添加到nullExcelContent列表中
-                nullExcelContent.add(readExcelList.get(rowIndex));
+            if (isAccountEmpty || isDictIdEmpty) {
+                nullExcelContent.add(values);
                 continue; // 继续检查下一行数据
             }
 
             // 构建完整的SQL语句
             StringBuilder sql = new StringBuilder("UPDATE " + tableName + " SET ");
-            for (int i = 0; i < field.length; i++) {
+            for (int i = 0; i < field.length; i++) { // 包括所有字段
                 if (i > 0) {
                     sql.append(", ");
                 }
                 sql.append(reversoName[indices[i]])
                         .append(" = '")
-                        .append(values[i].replace("'", "''")) // 防止SQL注入，对单引号进行转义
+                        .append(values[indices[i]].replace("'", "''")) // 防止SQL注入，对单引号进行转义
                         .append("'");
             }
-            sql.append(" WHERE ").append(reversoName[indices[field.length]])
+
+            // 添加WHERE子句
+            sql.append(" WHERE ").append(keyName[0])
                     .append(" = '")
-                    .append(values[indices.length - 1].replace("'", "''")) // 防止SQL注入，对单引号进行转义
+                    .append(values[Integer.parseInt(keyIndex[0])].replace("'", "''"))
+                    .append("' AND ")
+                    .append(keyName[1])
+                    .append(" = '")
+                    .append(values[Integer.parseInt(keyIndex[1])].replace("'", "''"))
                     .append("'");
 
-            // 将构建的SQL语句添加到列表中，以便后续执行
+            // 将构建的SQL语句添加到列表中
             sqlList.add(sql.toString());
         }
 
         int sum = 0;//计数
         // 执行数据库更新
-        for (int i = 1; i < sqlList.size(); i++) {
+        for (int i = 0; i < sqlList.size(); i++) {
             jdbcTemplate.update(sqlList.get(i));
             sum++;
         }
 
-        int size = readExcelList.size();//主键数量
-        int nullPri = size - sum;
-        databasePo.setNullValue(nullPri);
-        databasePo.setNumExcel(size);
+        databasePo.setNullValue(nullExcelContent.size());
+        databasePo.setNumExcel(readExcelList.size() - 1);
         databasePo.setNumValue(sum);
-        databasePo.setSumNums(sum);
         databasePo.setNullExcelContent(nullExcelContent);
-        return databasePo; // 返回DatabasePo对象，可能包含更新结果或其他信息
+        return databasePo;
     }
+
 
     /**********************************private**********************************/
 
