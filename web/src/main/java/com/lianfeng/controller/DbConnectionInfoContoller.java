@@ -66,5 +66,4 @@ public class DbConnectionInfoContoller {
         }
         return R.success("表结构相同");
     }
-
 }

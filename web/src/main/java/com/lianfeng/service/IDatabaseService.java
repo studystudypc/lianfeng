@@ -31,5 +31,23 @@ public interface IDatabaseService extends IService<Object> {
      */
     DatabasePo returnReverso(MultipartFile file);
 
+    /**
+     * 多字段更新
+     * @param file
+     * @param priName
+     * @param keyName
+     * @param field
+     * @return
+     */
     DatabasePo updateExcel(MultipartFile file,String priName,String[] keyName,String[] field);
+
+    /**
+     * 多字段用户选择更新
+     * @param file
+     * @param tableName
+     * @param keyName
+     * @param field
+     * @return
+     */
+    DatabasePo moreUpdateField(MultipartFile file, String tableName, String[] keyName, String[] field);
 }

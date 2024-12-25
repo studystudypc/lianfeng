@@ -1,15 +1,12 @@
 package com.lianfeng.service.impl;
 
-import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lianfeng.common.exception.LFBusinessException;
 import com.lianfeng.common.utils.ExcelUtils;
 import com.lianfeng.constans.DictConstants;
 import com.lianfeng.mapper.DatabaseMapper;
 import com.lianfeng.service.IDatabaseService;
-import com.lianfeng.vo.CompareDBVo;
 import com.lianfeng.po.DatabasePo;
-import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -26,6 +23,7 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -286,6 +284,136 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
         return databasePo;
     }
 
+    /**
+     * 多字段用户选择更新
+     *
+     * @param file
+     * @param tableName
+     * @param keyName
+     * @param field
+     * @return
+     */
+    @Override
+    public DatabasePo moreUpdateField(MultipartFile file, String tableName, String[] keyName, String[] field) {
+        DatabasePo databasePo = returnReverso(file);
+        String[] reversoName = databasePo.getReversoName(); // 表头的名字
+
+        // 读取 Excel 文件
+        List<String[]> clearExcelList = ExcelUtils.readExcel(file);
+
+        // 清除空行
+        List<String[]> readExcelList = new ArrayList<>();
+        for (String[] row : clearExcelList) {
+            boolean isEmpty = true;
+            for (String cell : row) {
+                if (cell != null && !cell.trim().isEmpty()) {
+                    isEmpty = false;
+                    break;
+                }
+            }
+            if (!isEmpty) {
+                readExcelList.add(row);
+            }
+        }
+
+        // 确定主键列的索引
+        int[] keyIndexes = new int[keyName.length];
+        for (int i = 0; i < keyName.length; i++) {
+            keyIndexes[i] = -1;
+            for (int j = 0; j < reversoName.length; j++) {
+                if (keyName[i].equals(reversoName[j])) {
+                    keyIndexes[i] = j;
+                    break;
+                }
+            }
+        }
+
+        // 验证主键是否存在于表头
+        for (int index : keyIndexes) {
+            if (index == -1) {
+                throw new LFBusinessException("指定的 主键 未在表头中找到。");
+            }
+        }
+
+        // 清除主键为空的行
+        List<String[]> clearKeyExcelList = new ArrayList<>();
+        List<String[]> nullKeyExcelList = new ArrayList<>();
+        for (String[] values : readExcelList) {
+            boolean isKeyEmpty = false;
+            for (int keyIndex : keyIndexes) {
+                if (values[keyIndex] == null || values[keyIndex].trim().isEmpty()) {
+                    isKeyEmpty = true;
+                    break;
+                }
+            }
+            if (!isKeyEmpty) {
+                clearKeyExcelList.add(values);
+            }else {
+                nullKeyExcelList.add(values);
+            }
+        }
+
+        // 构建 SQL 语句
+        List<String> sqlList = new ArrayList<>();
+        for (int j = 1; j < clearKeyExcelList.size(); j++) {
+            String[] values = clearKeyExcelList.get(j);
+
+            StringBuilder sql = new StringBuilder("INSERT INTO " + tableName + " (");
+
+            // 构建字段部分
+            for (int i = 0; i < reversoName.length; i++) {
+                if (i > 0) {
+                    sql.append(", ");
+                }
+                sql.append(reversoName[i]);
+            }
+
+            sql.append(") VALUES (");
+
+            // 构建值部分
+            for (int i = 0; i < reversoName.length; i++) {
+                if (i > 0) {
+                    sql.append(", ");
+                }
+                String value = values[i] == null ? "" : values[i].replace("'", "''");
+                sql.append("'").append(value).append("'");
+            }
+
+            sql.append(") ON DUPLICATE KEY UPDATE ");
+
+            // 构建更新部分
+            for (int i = 0; i < field.length; i++) {
+                if (i > 0) {
+                    sql.append(", ");
+                }
+                String[] fieldParts = field[i].split("=");
+                if (fieldParts.length != 2) {
+                    throw new LFBusinessException("字段格式错误，必须为 key=value 格式");
+                }
+                String fieldName = fieldParts[0].trim();
+                String fieldValue = fieldParts[1].trim();
+                sql.append(fieldName)
+                        .append(" = '")
+                        .append(fieldValue.replace("'", "''"))
+                        .append("'");
+            }
+
+            sqlList.add(sql.toString());
+        }
+
+        // 执行 SQL
+        int sum = 0;
+        for (String sqlStr : sqlList) {
+            jdbcTemplate.update(sqlStr);
+            sum++;
+        }
+
+        // 设置返回结果
+        databasePo.setNumExcel(readExcelList.size() - 1); // 去除表头行
+        databasePo.setNumValue(sum);
+        databasePo.setNullExcelContent(nullKeyExcelList);
+        return databasePo;
+    }
 
     /**********************************private**********************************/
 
