@@ -336,7 +336,7 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
         }
 
         // 清除主键为空的行
-        List<String[]> clearKeyExcelList = new ArrayList<>();
+        List<String[]> clearKeyExcelList = new ArrayList<>(); // 有效主键字段
         List<String[]> nullKeyExcelList = new ArrayList<>();
         for (String[] values : readExcelList) {
             boolean isKeyEmpty = false;
@@ -348,7 +348,7 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
             }
             if (!isKeyEmpty) {
                 clearKeyExcelList.add(values);
-            }else {
+            } else {
                 nullKeyExcelList.add(values);
             }
         }
@@ -358,30 +358,8 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
         for (int j = 1; j < clearKeyExcelList.size(); j++) {
             String[] values = clearKeyExcelList.get(j);
 
-            StringBuilder sql = new StringBuilder("INSERT INTO " + tableName + " (");
-
-            // 构建字段部分
-            for (int i = 0; i < reversoName.length; i++) {
-                if (i > 0) {
-                    sql.append(", ");
-                }
-                sql.append(reversoName[i]);
-            }
-
-            sql.append(") VALUES (");
-
-            // 构建值部分
-            for (int i = 0; i < reversoName.length; i++) {
-                if (i > 0) {
-                    sql.append(", ");
-                }
-                String value = values[i] == null ? "" : values[i].replace("'", "''");
-                sql.append("'").append(value).append("'");
-            }
-
-            sql.append(") ON DUPLICATE KEY UPDATE ");
-
-            // 构建更新部分
+            // 构建 UPDATE 语句
+            StringBuilder sql = new StringBuilder("UPDATE " + tableName + " SET ");
             for (int i = 0; i < field.length; i++) {
                 if (i > 0) {
                     sql.append(", ");
@@ -398,43 +376,58 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
                         .append("'");
             }
 
-            sqlList.add(sql.toString());
-        }
+            // 添加 WHERE 子句
+            sql.append(" WHERE ");
+            for (int i = 0; i < keyIndexes.length; i++) {
+                if (i > 0) {
+                    sql.append(" AND ");
+                }
+                String keyValue = values[keyIndexes[i]].replace("'", "''");
+                sql.append(keyName[i])
+                        .append(" = '")
+                        .append(keyValue)
+                        .append("'");
+            }
 
-        // 执行 SQL
-        int sum = 0;
-        for (String sqlStr : sqlList) {
-            jdbcTemplate.update(sqlStr);
-            sum++;
+            // 执行 UPDATE
+            int update = jdbcTemplate.update(sql.toString());
+            if (update == 0) {
+                // 构建 INSERT 语句
+                StringBuilder insertSql = new StringBuilder("INSERT INTO " + tableName + " (");
+                for (int i = 0; i < reversoName.length; i++) {
+                    if (i > 0) {
+                        insertSql.append(", ");
+                    }
+                    insertSql.append(reversoName[i]);
+                }
+                insertSql.append(") VALUES (");
+                for (int i = 0; i < reversoName.length; i++) {
+                    if (i > 0) {
+                        insertSql.append(", ");
+                    }
+                    String value = values[i] == null ? "" : values[i].replace("'", "''");
+                    insertSql.append("'").append(value).append("'");
+                }
+                insertSql.append(")");
+
+                // 执行 INSERT
+                jdbcTemplate.update(insertSql.toString());
+            }
+
+            sqlList.add(sql.toString());
         }
 
         // 设置返回结果
         databasePo.setNumExcel(readExcelList.size() - 1); // 去除表头行
-        databasePo.setNumValue(sum);
+        databasePo.setNumValue(sqlList.size());
         databasePo.setNullExcelContent(nullKeyExcelList);
         return databasePo;
     }
 
+
+
     /**********************************private**********************************/
 
-    private List<Map<String, Object>> fetchTableData(Connection connection, String tableName) throws SQLException {
-        List<Map<String, Object>> tableData = new ArrayList<>();
-        String query = "SELECT * FROM " + tableName;
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(query)) {
-            while (resultSet.next()) {
-                Map<String, Object> row = new HashMap<>();
-                int columnCount = resultSet.getMetaData().getColumnCount();
-                for (int i = 1; i <= columnCount; i++) {
-                    String columnName = resultSet.getMetaData().getColumnName(i);
-                    Object columnValue = resultSet.getObject(i);
-                    row.put(columnName, columnValue);
-                }
-                tableData.add(row);
-            }
-        }
-        return tableData;
-    }
 
     /**
      * 处理json主键为空的字段

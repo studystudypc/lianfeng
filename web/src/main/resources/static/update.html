@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件上传与对比</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 1200px;
+            margin: auto;
+        }
+        .upload-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: bold;
+        }
+        .form-group input[type="file"],
+        .form-group input[type="text"],
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+        .form-group button {
+            width: 100%;
+            padding: 8px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #0056b3;
+        }
+        .message {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+
+</head>
+<body>
+<div class="container">
+    <div class="upload-container">
+        <h2>上传文件</h2>
+        <form id="uploadForm">
+            <div class="form-group">
+                <label for="file">选择文件：</label>
+                <input type="file" id="file" name="file" accept=".xls" required>
+            </div>
+            <div class="form-group">
+                <label for="name">数据库表名：</label>
+                <input type="text" id="name" name="name" placeholder="请输入表名" required>
+            </div>
+            <div class="form-group">
+                <label for="primaryKey1">主键字段1：</label>
+                <input type="text" id="primaryKey1" name="idName1" placeholder="请输入主键字段1">
+            </div>
+            <div class="form-group">
+                <label for="primaryKey2">主键字段2：</label>
+                <input type="text" id="primaryKey2" name="idName2" placeholder="请输入主键字段2">
+            </div>
+            <div class="form-group">
+                <label for="primaryKey3">主键字段3：</label>
+                <input type="text" id="primaryKey3" name="idName3" placeholder="请输入主键字段3">
+            </div>
+            <div class="form-group">
+                <label for="primaryKey4">主键字段4：</label>
+                <input type="text" id="primaryKey4" name="idName4" placeholder="请输入主键字段4">
+            </div>
+            <div class="form-group">
+                <div id="selectFieldsContainer">
+                    <!-- 动态生成的下拉框将放在这个容器中 -->
+                </div>
+            </div>
+            <div class="form-group">
+                <button type="submit">提交表单</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // 获取下拉框容器
+    const selectFieldsContainer = document.getElementById('selectFieldsContainer');
+    const fileInput = document.getElementById('file');
+
+    // 选择文件时触发上传并加载字段数据
+    fileInput.addEventListener('change', function() {
+        const formData = new FormData(document.getElementById('uploadForm'));
+
+        // 在文件选择后立即触发文件上传请求
+        fetch('dict/returnRever', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())  // 解析返回的 JSON 数据
+            .then(data => {
+                console.log('返回数据:', data);  // 调试输出返回的数据
+
+                if (data && data.code === 200 && data.data && Array.isArray(data.data.reversoName)) {
+                    // 清空当前的下拉框容器
+                    selectFieldsContainer.innerHTML = '';
+
+                    // 获取 reversoName 列表
+                    const reversoNames = data.data.reversoName;
+
+                    // 循环根据字段数据生成下拉框
+                    for (let i = 0; i < reversoNames.length; i++) {
+                        const formGroup = document.createElement('div');
+                        formGroup.classList.add('form-group');
+                        formGroup.style.display = 'flex';  // 添加flex布局
+                        formGroup.style.gap = '10px';      // 添加间距
+
+                        // 创建一个包装器div来容纳下拉框和标签
+                        const selectWrapper = document.createElement('div');
+                        selectWrapper.style.flex = '1';    // 占用一半空间
+
+                        // 创建标签
+                        const label = document.createElement('label');
+                        label.setAttribute('for', `tableOptions_${i}`);
+                        label.textContent = `字段 ${i + 1}：`;
+
+                        // 创建下拉框
+                        const select = document.createElement('select');
+                        select.id = `tableOptions_${i}`;
+                        select.name = `tableOptions_${i}`;
+
+                        // 添加一个 null 选项
+                        const nullOption = document.createElement('option');
+                        nullOption.value = '';
+                        nullOption.textContent = '请选择';
+                        select.appendChild(nullOption);
+
+                        // 循环将所有 reversoName 的值添加到下拉框中
+                        reversoNames.forEach((field) => {
+                            const option = document.createElement('option');
+                            option.value = field;
+                            option.textContent = field;
+                            select.appendChild(option);
+                        });
+
+                        // 创建一个包装器div来容纳输入框和标签
+                        const inputWrapper = document.createElement('div');
+                        inputWrapper.style.flex = '1';    // 占用一半空间
+
+                        // 创建输入框标签
+                        const inputLabel = document.createElement('label');
+                        inputLabel.setAttribute('for', `fieldValue_${i}`);
+                        inputLabel.textContent = '值：';
+
+                        // 创建输入框
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.id = `fieldValue_${i}`;
+                        input.name = `fieldValue_${i}`;
+                        input.placeholder = '请输入值';
+
+                        // 将元素添加到各自的包装器中
+                        selectWrapper.appendChild(label);
+                        selectWrapper.appendChild(select);
+                        inputWrapper.appendChild(inputLabel);
+                        inputWrapper.appendChild(input);
+
+                        // 将两个包装器添加到表单组
+                        formGroup.appendChild(selectWrapper);
+                        formGroup.appendChild(inputWrapper);
+
+                        // 将表单组添加到容器
+                        selectFieldsContainer.appendChild(formGroup);
+                    }
+                } else {
+                    // 如果数据没有字段，显示提示信息
+                    selectFieldsContainer.innerHTML = '<div>未加载字段</div>';
+                }
+            })
+            .catch(error => {
+                console.error('加载字段出错:', error);
+                selectFieldsContainer.innerHTML = '<div>加载失败</div>';
+            });
+    });
+
+    // 修改表单提交部分
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(document.getElementById('uploadForm'));
+        const tableName = document.getElementById('name').value;
+
+        // 确保将 tableName 添加到 formData 中
+        formData.append('tableName', tableName);
+
+
+        const fileInput = document.getElementById('file');
+        if (fileInput.files.length === 0) {
+            alert('请选择文件');
+            return;
+        }
+
+        // 添加文件
+        formData.append('file', fileInput.files[0]);
+
+
+        // 创建数组收集主键字段值
+        const keyName = [];
+        for (let i = 1; i <= 4; i++) {
+            const keyNameInput = document.getElementById(`primaryKey${i}`);
+            if (keyNameInput && keyNameInput.value.trim()) {
+                keyName.push(keyNameInput.value.trim());
+            }
+        }
+
+        // 直接将数组添加到 formData
+        formData.append('keyName', JSON.stringify(keyName));
+
+
+
+
+
+        // 获取所有下拉框和对应的输入框值
+        const selects = document.querySelectorAll('[name^="tableOptions_"]');
+        const field = [];  // 用于存储 field=value 格式的数组
+
+        selects.forEach((select, index) => {
+            const fieldName = select.value;
+            const inputValue = document.getElementById(`fieldValue_${index}`).value;
+
+            if (fieldName && inputValue) {
+                // 将字段名和值组合成 "field=value" 格式
+                field.push(`${fieldName}=${inputValue}`);
+            }
+        });
+
+        // 将组合后的数组传给后端
+        formData.append('field', JSON.stringify(field));
+
+        try {
+            const response = await fetch('dict/moreUpdateField', {
+                method: 'POST',
+                body: formData
+            });
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+
+
+</script>
+</body>
+</html>
