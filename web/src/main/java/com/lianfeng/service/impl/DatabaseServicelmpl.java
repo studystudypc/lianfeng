@@ -19,11 +19,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
-import java.util.stream.Collectors;
 
 
 @Service
@@ -392,15 +390,38 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
             // 执行 UPDATE
             int update = jdbcTemplate.update(sql.toString());
             if (update == 0) {
-                // 构建 INSERT 语句
+                // 构建 INSERT 语句并包含 field 的内容
                 StringBuilder insertSql = new StringBuilder("INSERT INTO " + tableName + " (");
+
+                // 插入表头字段
                 for (int i = 0; i < reversoName.length; i++) {
                     if (i > 0) {
                         insertSql.append(", ");
                     }
                     insertSql.append(reversoName[i]);
                 }
+
+                // 插入 field 中的键值对
+                for (int i = 0; i < field.length; i++) {
+                    String[] fieldParts = field[i].split("=");
+                    if (fieldParts.length == 2) {
+                        String fieldName = fieldParts[0].trim();
+                        boolean exists = false;
+                        for (String columnName : reversoName) {
+                            if (columnName.equals(fieldName)) {
+                                exists = true;
+                                break;
+                            }
+                        }
+                        if (!exists) {
+                            insertSql.append(", ").append(fieldName);
+                        }
+                    }
+                }
+
                 insertSql.append(") VALUES (");
+
+                // 插入 Excel 行数据
                 for (int i = 0; i < reversoName.length; i++) {
                     if (i > 0) {
                         insertSql.append(", ");
@@ -408,12 +429,21 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
                     String value = values[i] == null ? "" : values[i].replace("'", "''");
                     insertSql.append("'").append(value).append("'");
                 }
+
+                // 插入 field 中的值
+                for (int i = 0; i < field.length; i++) {
+                    String[] fieldParts = field[i].split("=");
+                    if (fieldParts.length == 2) {
+                        String fieldValue = fieldParts[1].trim();
+                        insertSql.append(", '").append(fieldValue.replace("'", "''")).append("'");
+                    }
+                }
+
                 insertSql.append(")");
 
                 // 执行 INSERT
                 jdbcTemplate.update(insertSql.toString());
             }
-
             sqlList.add(sql.toString());
         }
 
@@ -423,7 +453,6 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
         databasePo.setNullExcelContent(nullKeyExcelList);
         return databasePo;
     }
-
 
 
     /**********************************private**********************************/
