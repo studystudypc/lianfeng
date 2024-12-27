@@ -1,186 +1,143 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文件上传与对比</title>
+    <meta charset="utf-8">
+    <title>文件管理系统</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/layui/2.8.3/css/layui.css">
+    <link rel="stylesheet" href="css/style.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
+        /* 左侧菜单样式 */
+        .layui-side {
+            top: 60px;
+            box-shadow: 2px 0 6px rgba(0,0,0,0.1);
         }
-        .container {
+
+        .layui-nav-tree {
+            width: 200px;
+            padding: 0;
+        }
+
+        .layui-nav-tree .layui-nav-item {
+            margin: 5px 0;
+        }
+
+        .layui-nav-tree .layui-nav-item a {
+            height: 50px;
+            line-height: 50px;
+            padding-left: 25px;
+            transition: all 0.3s;
+        }
+
+        .layui-nav-tree .layui-nav-item a:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .layui-nav .layui-icon {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        /* 主体内容区域样式 */
+        .layui-body {
+            left: 200px;
+            overflow: hidden;
+        }
+
+        /* 欢迎页面样式 */
+        .welcome-section {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             display: flex;
-            flex-direction: column;
-            gap: 20px;
-            max-width: 1200px;
-            margin: auto;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1E9FFF 0%, #2196F3 100%);
+            z-index: -1;
         }
-        .upload-container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        h2 {
-            text-align: center;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            font-weight: bold;
-        }
-        .form-group input[type="file"],
-        .form-group input[type="text"],
-        .form-group select {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-        }
-        .form-group button {
-            width: 100%;
-            padding: 8px;
-            background-color: #007bff;
+
+        .welcome-section h1 {
+            font-size: 48px;
             color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            animation: fadeIn 1.5s ease-out;
         }
-        .form-group button:hover {
-            background-color: #0056b3;
+
+        /* 头部样式 */
+        .layui-header {
+            background-color: #1E9FFF;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
-        .message {
-            margin-top: 20px;
-            text-align: center;
+
+        .layui-logo {
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 60px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
     </style>
+
 </head>
 <body>
-<div class="container">
-    <div class="upload-container">
-        <h2>上传和对比文件</h2>
-        <form id="uploadForm">
-            <div class="form-group">
-                <label for="file">选择文件：</label>
-                <input type="file" id="file" name="file" accept=".xls" required>
-            </div>
-            <div class="form-group">
-                <label for="name">数据库表名：</label>
-                <input type="text" id="name" name="name" placeholder="请输入表名" required>
-            </div>
-            <div class="form-group">
-                <label for="primaryKey">主键字段：</label>
-                <input type="text" id="primaryKey" name="idName" placeholder="请输入主键字段" required>
-            </div>
-            <div class="form-group">
-                <div id="selectFieldsContainer">
-                    <!-- 动态生成的下拉框将放在这个容器中 -->
-                </div>
-            </div>
-            <div class="form-group">
-                <button type="submit">提交表单</button>
-            </div>
-        </form>
+<div class="layui-layout layui-layout-admin">
+    <!-- 头部 -->
+    <div class="layui-header">
+        <div class="layui-logo">文件管理系统</div>
+    </div>
+
+    <!-- 左侧导航 -->
+    <div class="layui-side layui-bg-black">
+        <div class="layui-side-scroll">
+            <ul class="layui-nav layui-nav-tree" lay-filter="nav">
+                <li class="layui-nav-item">
+                    <a href="./upload.html">
+                        <i class="layui-icon layui-icon-file"></i>
+                        文件上传
+                    </a>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="./update.html">
+                        <i class="layui-icon layui-icon-upload"></i>
+                        多字段更新文件
+                    </a>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="./compare.html">
+                        <i class="layui-icon layui-icon-template"></i>
+                        文件结构对比
+                    </a>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="./dbupload.html">
+                        <i class="layui-icon layui-icon-database"></i>
+                        数据库传输
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 内容主体 -->
+    <div class="layui-body" id="content">
+        <div class="welcome-section">
+            <h1>文件管理模块</h1>
+        </div>
     </div>
 </div>
 
-<script>
-    const selectFieldsContainer = document.getElementById('selectFieldsContainer');
-    const fileInput = document.getElementById('file');
-
-    // 选择文件时触发上传并加载字段数据
-    fileInput.addEventListener('change', function() {
-        const formData = new FormData(document.getElementById('uploadForm'));
-
-        // 在文件选择后立即触发文件上传请求
-        fetch('dict/returnRever', {
-            method: 'POST',
-            body: formData
-        })
-            .then(response => response.json())  // 解析返回的 JSON 数据
-            .then(data => {
-                console.log('返回数据:', data);  // 调试输出返回的数据
-
-                if (data && data.code === 200 && data.data && Array.isArray(data.data.reversoName)) {
-                    // 清空当前的下拉框容器
-                    selectFieldsContainer.innerHTML = '';
-
-                    // 获取 reversoName 列表
-                    const reversoNames = data.data.reversoName;
-
-                    // 循环根据字段数据生成下拉框
-                    reversoNames.forEach((field, i) => {
-                        const formGroup = document.createElement('div');
-                        formGroup.classList.add('form-group');
-
-                        // 创建标签
-                        const label = document.createElement('label');
-                        label.setAttribute('for', `tableOptions_${i}`);
-                        label.textContent = `字段 ${i + 1}：`;
-
-                        // 创建下拉框
-                        const select = document.createElement('select');
-                        select.id = `tableOptions_${i}`;
-                        select.name = `tableOptions_${i}`;
-
-                        // 添加一个 null 选项
-                        const nullOption = document.createElement('option');
-                        nullOption.value = '';
-                        nullOption.textContent = '请选择';
-                        select.appendChild(nullOption);
-
-                        // 添加字段选项
-                        reversoNames.forEach((field) => {
-                            const option = document.createElement('option');
-                            option.value = field;
-                            option.textContent = field;
-                            select.appendChild(option);
-                        });
-
-                        // 将标签和下拉框添加到表单组
-                        formGroup.appendChild(label);
-                        formGroup.appendChild(select);
-
-                        // 将表单组添加到容器
-                        selectFieldsContainer.appendChild(formGroup);
-                    });
-                } else {
-                    selectFieldsContainer.innerHTML = '<div>未加载字段</div>';
-                }
-            })
-            .catch(error => {
-                console.error('加载字段出错:', error);
-                selectFieldsContainer.innerHTML = '<div>加载失败</div>';
-            });
-    });
-
-    // 阻止表单的默认提交行为并处理文件上传
-    document.getElementById('uploadForm').addEventListener('submit', function(event) {
-        event.preventDefault();  // 阻止表单默认提交
-
-        const formData = new FormData(this);
-
-        fetch('dict/updateField', {
-            method: 'POST',
-            body: formData
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data && data.code === 200) {
-                    alert('文件上传成功！');
-                } else {
-                    alert('文件上传失败，请重试。');
-                }
-            })
-            .catch(error => {
-                console.error('上传失败:', error);
-                alert('文件上传失败，请重试。');
-            });
-    });
-</script>
+<script src="https://cdn.staticfile.org/layui/2.8.3/layui.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>
