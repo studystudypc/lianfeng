@@ -3,20 +3,13 @@ package com.lianfeng.service.impl;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.google.common.reflect.TypeToken;
-import com.google.gson.Gson;
 import com.lianfeng.common.exception.LFBusinessException;
 import com.lianfeng.common.listenner.ExcelListenner;
 import com.lianfeng.constans.DictConstants;
-import com.lianfeng.model.entity.Account;
 import com.lianfeng.model.entity.Dict;
 import com.lianfeng.mapper.DictMapper;
-import com.lianfeng.po.DictPoToExcel;
+import com.lianfeng.po.DictPoToExcelPo;
 import com.lianfeng.service.IDictService;
-import org.apache.ibatis.jdbc.SQL;
 import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,9 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.nio.file.*;
-import java.sql.SQLData;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -220,10 +211,10 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict>
      * @param dictPoToDB
      * @return boolean
      **/
-    private boolean compareDictLists(List<DictPoToExcel> dictPoToExcelList, List<DictPoToExcel> dictPoToDB) {
+    private boolean compareDictLists(List<DictPoToExcelPo> dictPoToExcelList, List<DictPoToExcelPo> dictPoToDB) {
         String dictPoToExcelListString = dictPoToExcelList.toString().replaceAll(",\\s*dictId=\\d+", "");
-        List<DictPoToExcel> dblist = dictPoToDB;
-        for (DictPoToExcel dictPoToExcel : dblist) {
+        List<DictPoToExcelPo> dblist = dictPoToDB;
+        for (DictPoToExcelPo dictPoToExcel : dblist) {
             String toExcelString = dictPoToExcel.toString();
             if (toExcelString.contains(dictPoToExcelListString)){
                 throw new LFBusinessException("数据文件内容与Excel文件内容不一样");

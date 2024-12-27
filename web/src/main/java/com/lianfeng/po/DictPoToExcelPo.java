@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.lianfeng.common.serializer.CustomIntegerDeserializer;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 
 /**
@@ -16,7 +15,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @ApiModel(value = "Dict参数")
-public class DictPoToExcel {
+public class DictPoToExcelPo {
     @JsonDeserialize(using = CustomIntegerDeserializer.class)
     @JsonProperty("dict_id")
     private Integer dictId;
