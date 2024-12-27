@@ -23,7 +23,7 @@ public class DatabaseContoller {
     private IDatabaseService iDatabaseService;
 
     @ApiOperation(
-            value = "文件上传接口，",
+            value = "文件上传接口",
             notes = "上传Excel文件,并存入数据库，" +
                     "file = 上传的文件，" +
                     "name = 需要上传的数据库表名，" +
@@ -56,7 +56,7 @@ public class DatabaseContoller {
         return R.data(databasePo);
     }
 
-    @ApiOperation(
+  /*  @ApiOperation(
             value = "多字段更新",
             notes = "多字段更新," +
                     "file = 文件，" +
@@ -73,6 +73,25 @@ public class DatabaseContoller {
         }
         DatabasePo databasePo = iDatabaseService.updateExcel(file, tableName, keyName , field);
         return R.data(databasePo);
-    }
+    }*/
 
+    @ApiOperation(
+            value = "多字段更新",
+            notes = "多字段更新," +
+                    "file = 文件，" +
+                    "tableName = 表名，" +
+                    "priName = 多主键名字，" +
+                    "field = 多字段",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @PostMapping("moreUpdateField")
+    public R<DatabasePo> moreUpdateField(@RequestPart("file") MultipartFile file, String tableName, String[] keyName,String[] field) {
+        if (file.isEmpty()) {
+            return R.fail("文件上传为空或文件名字为空");
+        }
+
+        DatabasePo databasePo = iDatabaseService.moreUpdateField(file, tableName, keyName , field);
+        return R.data(databasePo);
+    }
 }

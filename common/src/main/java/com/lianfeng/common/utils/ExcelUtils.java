@@ -98,7 +98,7 @@ public class ExcelUtils {
 
     /**
      * @Author liuchuaning
-     * @Description 传入Excel文件，读取Excel忘记拿内容
+     * @Description 传入Excel文件，读取Excel文件拿内容
      * @Date 2024-12-17 14:38
      * @param file
      * @return List<String[]>
@@ -111,21 +111,21 @@ public class ExcelUtils {
                     Sheet sheet = workbook.getSheetAt(sheetNum);
                     if (sheet == null) continue;
 
-                    Iterator<Row> rowIterator = sheet.iterator();
-                    while (rowIterator.hasNext()) {
-                        Row row = rowIterator.next();
-                        if (row == null || row.getPhysicalNumberOfCells() == 0) continue;
+                    int headerCellCount = sheet.getRow(0).getLastCellNum(); // 获取表头列数
+                    for (Row row : sheet) {
+                        if (row == null) continue;
 
-                        int firstCellNum = row.getFirstCellNum();
-                        int lastCellNum = row.getLastCellNum();
-                        String[] cells = new String[lastCellNum]; // 计算数组大小
+                        String[] cells = new String[headerCellCount]; // 固定列数
+                        boolean isEmptyRow = true;
 
-                        for (int cellNum = firstCellNum; cellNum < lastCellNum; cellNum++) {
+                        for (int cellNum = 0; cellNum < headerCellCount; cellNum++) {
                             Cell cell = row.getCell(cellNum);
                             String cellValue = getCellValue(cell);
-                            cells[cellNum - firstCellNum] = cellValue; // 索引
+                            if (!cellValue.isEmpty()) isEmptyRow = false;
+                            cells[cellNum] = cellValue;
                         }
-                        list.add(cells);
+
+                        if (!isEmptyRow) list.add(cells); // 仅添加非空行
                     }
                 }
             }
@@ -134,8 +134,6 @@ public class ExcelUtils {
         }
         return list;
     }
-
-
 
     /**********************************private**********************************/
 

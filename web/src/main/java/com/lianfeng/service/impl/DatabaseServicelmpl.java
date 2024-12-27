@@ -1,15 +1,12 @@
 package com.lianfeng.service.impl;
 
-import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lianfeng.common.exception.LFBusinessException;
 import com.lianfeng.common.utils.ExcelUtils;
 import com.lianfeng.constans.DictConstants;
 import com.lianfeng.mapper.DatabaseMapper;
 import com.lianfeng.service.IDatabaseService;
-import com.lianfeng.vo.CompareDBVo;
 import com.lianfeng.po.DatabasePo;
-import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -22,7 +19,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
@@ -286,27 +282,181 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
         return databasePo;
     }
 
+    /**
+     * 多字段用户选择更新
+     *
+     * @param file
+     * @param tableName
+     * @param keyName
+     * @param field
+     * @return
+     */
+    @Override
+    public DatabasePo moreUpdateField(MultipartFile file, String tableName, String[] keyName, String[] field) {
+        DatabasePo databasePo = returnReverso(file);
+        String[] reversoName = databasePo.getReversoName(); // 表头的名字
+
+        // 读取 Excel 文件
+        List<String[]> clearExcelList = ExcelUtils.readExcel(file);
+
+        // 清除空行
+        List<String[]> readExcelList = new ArrayList<>();
+        for (String[] row : clearExcelList) {
+            boolean isEmpty = true;
+            for (String cell : row) {
+                if (cell != null && !cell.trim().isEmpty()) {
+                    isEmpty = false;
+                    break;
+                }
+            }
+            if (!isEmpty) {
+                readExcelList.add(row);
+            }
+        }
+
+        // 确定主键列的索引
+        int[] keyIndexes = new int[keyName.length];
+        for (int i = 0; i < keyName.length; i++) {
+            keyIndexes[i] = -1;
+            for (int j = 0; j < reversoName.length; j++) {
+                if (keyName[i].equals(reversoName[j])) {
+                    keyIndexes[i] = j;
+                    break;
+                }
+            }
+        }
+
+        // 验证主键是否存在于表头
+        for (int index : keyIndexes) {
+            if (index == -1) {
+                throw new LFBusinessException("指定的 主键 未在表头中找到。");
+            }
+        }
+
+        // 清除主键为空的行
+        List<String[]> clearKeyExcelList = new ArrayList<>(); // 有效主键字段
+        List<String[]> nullKeyExcelList = new ArrayList<>();
+        for (String[] values : readExcelList) {
+            boolean isKeyEmpty = false;
+            for (int keyIndex : keyIndexes) {
+                if (values[keyIndex] == null || values[keyIndex].trim().isEmpty()) {
+                    isKeyEmpty = true;
+                    break;
+                }
+            }
+            if (!isKeyEmpty) {
+                clearKeyExcelList.add(values);
+            } else {
+                nullKeyExcelList.add(values);
+            }
+        }
+
+        // 构建 SQL 语句
+        List<String> sqlList = new ArrayList<>();
+        for (int j = 1; j < clearKeyExcelList.size(); j++) {
+            String[] values = clearKeyExcelList.get(j);
+
+            // 构建 UPDATE 语句
+            StringBuilder sql = new StringBuilder("UPDATE " + tableName + " SET ");
+            for (int i = 0; i < field.length; i++) {
+                if (i > 0) {
+                    sql.append(", ");
+                }
+                String[] fieldParts = field[i].split("=");
+                if (fieldParts.length != 2) {
+                    throw new LFBusinessException("字段格式错误，必须为 key=value 格式");
+                }
+                String fieldName = fieldParts[0].trim();
+                String fieldValue = fieldParts[1].trim();
+                sql.append(fieldName)
+                        .append(" = '")
+                        .append(fieldValue.replace("'", "''"))
+                        .append("'");
+            }
+
+            // 添加 WHERE 子句
+            sql.append(" WHERE ");
+            for (int i = 0; i < keyIndexes.length; i++) {
+                if (i > 0) {
+                    sql.append(" AND ");
+                }
+                String keyValue = values[keyIndexes[i]].replace("'", "''");
+                sql.append(keyName[i])
+                        .append(" = '")
+                        .append(keyValue)
+                        .append("'");
+            }
+
+            // 执行 UPDATE
+            int update = jdbcTemplate.update(sql.toString());
+            if (update == 0) {
+                // 构建 INSERT 语句并包含 field 的内容
+                StringBuilder insertSql = new StringBuilder("INSERT INTO " + tableName + " (");
+
+                // 插入表头字段
+                for (int i = 0; i < reversoName.length; i++) {
+                    if (i > 0) {
+                        insertSql.append(", ");
+                    }
+                    insertSql.append(reversoName[i]);
+                }
+
+                // 插入 field 中的键值对
+                for (int i = 0; i < field.length; i++) {
+                    String[] fieldParts = field[i].split("=");
+                    if (fieldParts.length == 2) {
+                        String fieldName = fieldParts[0].trim();
+                        boolean exists = false;
+                        for (String columnName : reversoName) {
+                            if (columnName.equals(fieldName)) {
+                                exists = true;
+                                break;
+                            }
+                        }
+                        if (!exists) {
+                            insertSql.append(", ").append(fieldName);
+                        }
+                    }
+                }
+
+                insertSql.append(") VALUES (");
+
+                // 插入 Excel 行数据
+                for (int i = 0; i < reversoName.length; i++) {
+                    if (i > 0) {
+                        insertSql.append(", ");
+                    }
+                    String value = values[i] == null ? "" : values[i].replace("'", "''");
+                    insertSql.append("'").append(value).append("'");
+                }
+
+                // 插入 field 中的值
+                for (int i = 0; i < field.length; i++) {
+                    String[] fieldParts = field[i].split("=");
+                    if (fieldParts.length == 2) {
+                        String fieldValue = fieldParts[1].trim();
+                        insertSql.append(", '").append(fieldValue.replace("'", "''")).append("'");
+                    }
+                }
+
+                insertSql.append(")");
+
+                // 执行 INSERT
+                jdbcTemplate.update(insertSql.toString());
+            }
+            sqlList.add(sql.toString());
+        }
+
+        // 设置返回结果
+        databasePo.setNumExcel(readExcelList.size() - 1); // 去除表头行
+        databasePo.setNumValue(sqlList.size());
+        databasePo.setNullExcelContent(nullKeyExcelList);
+        return databasePo;
+    }
+
 
     /**********************************private**********************************/
 
-    private List<Map<String, Object>> fetchTableData(Connection connection, String tableName) throws SQLException {
-        List<Map<String, Object>> tableData = new ArrayList<>();
-        String query = "SELECT * FROM " + tableName;
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(query)) {
-            while (resultSet.next()) {
-                Map<String, Object> row = new HashMap<>();
-                int columnCount = resultSet.getMetaData().getColumnCount();
-                for (int i = 1; i <= columnCount; i++) {
-                    String columnName = resultSet.getMetaData().getColumnName(i);
-                    Object columnValue = resultSet.getObject(i);
-                    row.put(columnName, columnValue);
-                }
-                tableData.add(row);
-            }
-        }
-        return tableData;
-    }
 
     /**
      * 处理json主键为空的字段
