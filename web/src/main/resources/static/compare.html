@@ -120,13 +120,38 @@
         .missing {
             background-color: #fff7e6;
         }
+
+        .result-container {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .result-content {
+            margin-top: 10px;
+        }
+
+        .success {
+            color: #28a745;
+        }
+
+        .error {
+            color: #dc3545;
+        }
+
+        .difference-item {
+            margin: 5px 0;
+            padding: 5px;
+            background-color: #f8f9fa;
+        }
     </style>
 </head>
 <body>
 <h1 class="main-title">文件对比</h1>
 
 <div class="database-container">
-    <div class="database-module">
+    <div class="database-module" id="1">
         <h2>源数据库</h2>
         <div class="input-group" id="sourceInputGroup">
             <a>用户名字</a>
@@ -141,7 +166,7 @@
         </div>
     </div>
 
-    <div class="database-module">
+    <div class="database-module" id="2">
         <h2>目标数据库</h2>
         <div class="input-group" id="targetInputGroup">
             <a>用户名字</a>
@@ -157,6 +182,11 @@
     </div>
 </div>
 
+<div class="result-container">
+    <h2>对比结果</h2>
+    <div id="compareResult" class="result-content"></div>
+</div>
+
 <div class="table-comparison">
     <h2>表结构对比</h2>
     <div class="input-group">
@@ -167,7 +197,7 @@
 </div>
 
 <!-- 回到首页按钮 -->
-<button class="home-button" onclick="window.location.href = 'index.html';">回到首页</button>
+<button class="home-button"><a href="index.html">回到首页</a></button>
 
 <script>
     window.addEventListener('load', function () {
@@ -235,7 +265,8 @@
                 dbUrl: sourceDbName,
                 dbUsername: sourceDbUsername,
                 dbPassword: sourceDbPassword,
-                type: 'source'
+                type: 'source',
+                id: '1'
             })
         })
             .then(response => response.json())
@@ -275,7 +306,8 @@
                 dbUrl: targetDbName,
                 dbUsername: targetDbUsername,
                 dbPassword: targetDbPassword,
-                type: 'target'
+                type: 'target',
+                id: '2'
             })
         })
             .then(response => response.json())
@@ -320,6 +352,54 @@
     function displayComparison(comparisonData) {
         const resultDiv = document.getElementById('comparisonResult');
         resultDiv.textContent = JSON.stringify(comparisonData.differencesList, null, 2);
+    }
+
+    function displayCompareResult(response) {
+        const resultDiv = document.getElementById('compareResult');
+        resultDiv.innerHTML = ''; // 清空之前的结果
+
+        if (response.code === 200) {
+            if (response.data) {
+                // 有差异的情况
+                const content = `
+                    <h3>表名：${response.data.tableName}</h3>
+                    <div class="differences-list">
+                        <h4>差异项：</h4>
+                        ${response.data.differencesList.map(diff =>
+                    `<div class="difference-item">${diff}</div>`
+                ).join('')}
+                    </div>
+                `;
+                resultDiv.innerHTML = content;
+            } else {
+                // 表结构相同的情况
+                resultDiv.innerHTML = `<div class="success">${response.message}</div>`;
+            }
+        } else {
+            // 错误情况
+            resultDiv.innerHTML = `<div class="error">${response.message}</div>`;
+        }
+    }
+
+    function compareStructure() {
+        // ... 现有的请求代码 ...
+        fetch('compare/structure', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                // ... 请求参数 ...
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                displayCompareResult(data);
+            })
+            .catch(error => {
+                document.getElementById('compareResult').innerHTML =
+                    `<div class="error">请求失败：${error.message}</div>`;
+            });
     }
 </script>
 </body>

@@ -58,6 +58,22 @@
             margin-top: 20px;
             text-align: center;
         }
+
+        .home-button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        .home-button:hover {
+            background-color: #218838;
+        }
     </style>
 
 </head>
@@ -99,6 +115,8 @@
                 <button type="submit">提交表单</button>
             </div>
         </form>
+        <!-- 回到首页按钮 -->
+        <button class="home-button"><a href="index.html">回到首页</a></button>
     </div>
 </div>
 
@@ -257,7 +275,7 @@
         formData.append('field', JSON.stringify(field));
 
         try {
-            const response = await fetch('dict/moreUpdateField', {
+            const response = await fetch('dict/updateField', {
                 method: 'POST',
                 body: formData
             });
