@@ -42,6 +42,7 @@ public class DBTransmitContoller {
     )
     @PostMapping("DBTransmit")
     public R<DBTransmitPo> dBTransmit(String tableName, String[] keyName, String[] keyValue, String[] fieldName) throws SQLException {
+        DBTransmitPo dbTransmitPo = null;
         if (StringUtils.isBlank(tableName)){
             throw new LFBusinessException("表名不能为空");
         }
@@ -49,7 +50,13 @@ public class DBTransmitContoller {
             throw new LFBusinessException("主键名称不能为空");
         }
         if (ArrayUtils.isEmpty(keyValue) && ArrayUtils.isEmpty(fieldName)){
-            DBTransmitPo dbTransmitPo= idbTransmitService.dBTransmit(tableName,keyName);//全表传输
+             dbTransmitPo = idbTransmitService.dBTransmit(tableName,keyName);//全表传输
+        }
+        if(ArrayUtils.isEmpty(keyValue) && !ArrayUtils.isEmpty(fieldName)){
+            dbTransmitPo = idbTransmitService.dBTransmit(tableName,keyName,fieldName);//需要更新的字段
+        }
+        if (ArrayUtils.isEmpty(fieldName) && !ArrayUtils.isEmpty(keyValue)){
+            dbTransmitPo = idbTransmitService.dBTransmitKey(tableName,keyName,keyValue);//需要更新的主键
         }
 
 
