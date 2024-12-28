@@ -39,4 +39,13 @@ public interface IDBTransmitService extends IService<Object> {
      * @return
      */
     DBTransmitPo dBTransmitKey(String tableName, String[] keyName, String[] keyValue) throws SQLException;
+
+    /**
+     * 全字段更新
+     * @param tableName
+     * @param keyName
+     * @param keyValue
+     * @return
+     */
+    DBTransmitPo dBTransmit(String tableName, String[] keyName, String[] keyValue, String[] fieldName) throws SQLException;
 }

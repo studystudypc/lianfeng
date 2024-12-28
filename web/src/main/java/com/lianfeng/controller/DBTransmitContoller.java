@@ -40,7 +40,7 @@ public class DBTransmitContoller {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    @PostMapping("DBTransmit")
+    @PostMapping("Transmit")
     public R<DBTransmitPo> dBTransmit(String tableName, String[] keyName, String[] keyValue, String[] fieldName) throws SQLException {
         DBTransmitPo dbTransmitPo = null;
         if (StringUtils.isBlank(tableName)){
@@ -58,8 +58,7 @@ public class DBTransmitContoller {
         if (ArrayUtils.isEmpty(fieldName) && !ArrayUtils.isEmpty(keyValue)){
             dbTransmitPo = idbTransmitService.dBTransmitKey(tableName,keyName,keyValue);//需要更新的主键
         }
-
-
+        dbTransmitPo = idbTransmitService.dBTransmit(tableName,keyName,keyValue,fieldName);//全字段更新
         return R.success();
     }
 }
