@@ -152,7 +152,170 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
         return dbTransmitPo;
     }
 
+    /**
+     * 全字段更新
+     * @param tableName
+     * @param keyName
+     * @param keyValue
+     * @param fieldName
+     * @return
+     * @throws SQLException
+     */
+    @Override
+    public DBTransmitPo dBTransmit(String tableName, String[] keyName, String[] keyValue, String[] fieldName) throws SQLException {
+        DBTransmitPo dbTransmitPo = new DBTransmitPo();
+
+        LambdaQueryWrapper<DbConnectionInfo> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(DbConnectionInfo::getIsDeleted, LFanConstants.ZERO_INT); // 0未删除
+        List<DbConnectionInfo> list = iDbConnectionInfoService.list(queryWrapper);//数据源信息
+        if (list.size() < 2) {
+            throw new LFBusinessException("数据库连接信息不足");
+        }
+        DbConnectionInfo sourceInfo = list.get(0); // 第一个数据源
+        DbConnectionInfo targetInfo = list.get(1); // 第二个数据源
+
+        StringBuilder sqlSelect = new StringBuilder("SELECT ");//查询多主键的sql
+        for (int i = 0; i < fieldName.length; i++) {
+            if (i > 0){
+                sqlSelect.append(",");
+            }
+            sqlSelect.append(fieldName[i]);
+        }
+        sqlSelect.append(" FROM " + tableName);
+        sqlSelect.append(" WHERE ");
+        for (int i = 0; i < keyValue.length; i++) {
+            if (i > 0){
+                sqlSelect.append(" AND ");
+            }
+            sqlSelect.append(keyName[i]).append(" = '").append(keyValue[i].replace("'", "''")).append("'");
+        }
+
+        List<String> updateSql = updateConnection(sourceInfo.getDbUsername(),
+                sourceInfo.getDbPassword(),
+                sourceInfo.getDbUrl(),
+                keyName,
+                keyValue,
+                fieldName,
+                tableName,
+                sqlSelect.toString());//查询源数据，拼接更新sql语句。
+
+        allBTransmit(targetInfo.getDbUsername(),
+                targetInfo.getDbPassword(),
+                targetInfo.getDbUrl(),
+                updateSql);
+
+        return dbTransmitPo;
+    }
+
     /****************************************************private*****************************************/
+
+    /**
+     * 全字段更新sql执行
+     * @param dbUsername
+     * @param dbPassword
+     * @param dbUrl
+     * @param updateSql
+     * @throws SQLException
+     */
+    private void allBTransmit(String dbUsername, String dbPassword, String dbUrl, List<String> updateSql) throws SQLException {
+        Connection connection = JdbcUtil.getConnection(dbUrl, dbUsername, dbPassword); // 连接信息
+        PreparedStatement preparedStatement = null;
+
+        for (String sql : updateSql) {
+            preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.execute();
+//            ResultSetMetaData metaData = resultSet.getMetaData();
+        }
+        connection.close();
+        preparedStatement.close();
+    }
+
+    /**
+     * 全字段更新sql
+     * @param dbUsername
+     * @param dbPassword
+     * @param dbUrl
+     * @param keyName
+     * @param keyValue
+     * @param fieldName
+     * @param tableName
+     * @param sqlSelect
+     * @return
+     * @throws SQLException
+     */
+    private List<String> updateConnection(String dbUsername, String dbPassword, String dbUrl, String[] keyName, String[] keyValue, String[] fieldName, String tableName,String sqlSelect) throws SQLException {
+
+        Connection connection = JdbcUtil.getConnection(dbUrl, dbUsername, dbPassword); // 连接信息
+        PreparedStatement preparedStatement = connection.prepareStatement(sqlSelect);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        ResultSetMetaData metaData = resultSet.getMetaData();
+
+        List<Map<String, Object>> rows = new ArrayList<>();// 存放每行数据
+
+        while (resultSet.next()) {
+            Map<String, Object> row = new HashMap<>();
+            for (int i = 1; i <= metaData.getColumnCount(); i++) {
+                String columnName = metaData.getColumnName(i);
+                Object columnValue = resultSet.getObject(i);
+                row.put(columnName, columnValue);
+            }
+            rows.add(row);
+        }
+
+        List<String> listSql = new ArrayList<>();
+        for (Map<String, Object> row : rows) {
+            StringBuilder sql = new StringBuilder("INSERT INTO " + tableName + "(");
+            List<String> columns = new ArrayList<>();
+            List<Object> values = new ArrayList<>();
+
+            for (String columnName : row.keySet()) {
+                columns.add(columnName);
+            }
+            for (Object value : row.values()) {
+                values.add(value);
+            }
+            for (int i = 0; i < keyName.length; i++) {
+                if (i > 0 ){
+                    sql.append(",");
+                }
+                sql.append(keyName[i]);
+            }
+            for (int i = 0; i < fieldName.length; i++) {
+                if (i >= 0){
+                    sql.append(",");
+                }
+                sql.append(fieldName[i]);
+            }
+            sql.append(") VALUES ( ");
+            for (int i = 0; i < keyValue.length; i++) {
+                if (i > 0){
+                    sql.append(" , ");
+                }
+                sql.append("'").append(keyValue[i]).append("'");
+            }
+            for (int i = 0; i < columns.size(); i++) {
+                if (i >= 0){
+                    sql.append(" , ");
+                }
+                sql.append("'").append(values.get(i)).append("'");
+            }
+            sql.append(") ON DUPLICATE KEY UPDATE ");
+
+            for (int i = 0; i < columns.size(); i++) {
+                if (i > 0){
+                    sql.append(", ");
+                }
+                sql.append(columns.get(i)).append(" = '").append(values.get(i)).append("'");
+            }
+
+
+            listSql.add(sql.toString());
+        }
+
+        JdbcUtil.release(connection,preparedStatement,resultSet);
+
+        return listSql;
+    }
 
     /**
      * 需要更新的主键sql执行
