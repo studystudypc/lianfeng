@@ -68,7 +68,7 @@ public class DBTransmitContoller {
     }
 
 
-    @ApiOperation(
+  /*  @ApiOperation(
             value = "数据库传输接口",
             notes = "指定某个数据或某个字段上传数据库",
             consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -94,5 +94,5 @@ public class DBTransmitContoller {
         }
         dbTransmitPo = idbTransmitService.dBTransmit(tableName,keyName,keyValue,fieldName);//全字段更新
         return R.success();
-    }
+    }*/
 }
