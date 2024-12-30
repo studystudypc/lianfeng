@@ -3,6 +3,7 @@ package com.lianfeng.controller;
 import cn.hutool.core.util.ArrayUtil;
 import com.alibaba.excel.util.StringUtils;
 import com.baomidou.mybatisplus.core.toolkit.ArrayUtils;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.lianfeng.common.exception.LFBusinessException;
 import com.lianfeng.common.response.R;
 import com.lianfeng.po.DBTransmitPo;
@@ -18,7 +19,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @version 1.8
@@ -50,19 +54,43 @@ public class DBTransmitContoller {
             if (ArrayUtils.isEmpty(dbTransmitVo.getKeyName())){
                 throw new LFBusinessException("主键名称不能为空");
             }
-            if (ArrayUtils.isEmpty(dbTransmitVo.getKeyValue()) && ArrayUtils.isEmpty(dbTransmitVo.getFieldName())){
+            if (CollectionUtils.isEmpty(dbTransmitVo.getKeyValue()) && ArrayUtils.isEmpty(dbTransmitVo.getFieldName())){
                 dbTransmitPo = idbTransmitService.dBTransmit(dbTransmitVo.getTableName(),dbTransmitVo.getKeyName());//全表传输
             }
-            if(ArrayUtils.isEmpty(dbTransmitVo.getKeyValue()) && !ArrayUtils.isEmpty(dbTransmitVo.getFieldName())){
+            if(CollectionUtils.isEmpty(dbTransmitVo.getKeyValue()) && !ArrayUtils.isEmpty(dbTransmitVo.getFieldName())){
                 dbTransmitPo = idbTransmitService.dBTransmit(dbTransmitVo.getTableName(),dbTransmitVo.getKeyName(),dbTransmitVo.getFieldName());//需要更新的字段
             }
-            if (ArrayUtils.isEmpty(dbTransmitVo.getFieldName()) && !ArrayUtils.isEmpty(dbTransmitVo.getKeyValue())){
-                dbTransmitPo = idbTransmitService.dBTransmitKey(dbTransmitVo.getTableName(),dbTransmitVo.getKeyName(),dbTransmitVo.getKeyValue());//需要更新的主键
+            if (ArrayUtils.isEmpty(dbTransmitVo.getFieldName()) && !CollectionUtils.isEmpty(dbTransmitVo.getKeyValue())){//需要更新的主键
+                List<Map<String, Object>> keyValue  = dbTransmitVo.getKeyValue();
+                List<String> keyName = new ArrayList<>();
+                List<String> value = new ArrayList<>();
+
+                for (Map<String, Object> entry  : keyValue) {
+                    Set<String> keySet = entry.keySet();
+                    for (String key : keySet) {
+                        keyName.add(key);
+                        value.add(entry.get(key).toString());
+                    }
+                }
+                dbTransmitPo = idbTransmitService.dBTransmitKey(dbTransmitVo.getTableName(),keyName.toArray(new String[0]),value.toArray(new String[0]));
             }
-            if (!StringUtils.isEmpty(dbTransmitVo.getTableName()) && !ArrayUtils.isEmpty(dbTransmitVo.getKeyName()) && !ArrayUtils.isEmpty(dbTransmitVo.getKeyValue()) && !ArrayUtils.isEmpty(dbTransmitVo.getFieldName())){
-                dbTransmitPo = idbTransmitService.dBTransmit(dbTransmitVo.getTableName(),dbTransmitVo.getKeyName(),dbTransmitVo.getKeyValue(),dbTransmitVo.getFieldName());//全字段更新
+            if (!StringUtils.isEmpty(dbTransmitVo.getTableName()) && !ArrayUtils.isEmpty(dbTransmitVo.getKeyName()) && !CollectionUtils.isEmpty(dbTransmitVo.getKeyValue()) && !ArrayUtils.isEmpty(dbTransmitVo.getFieldName())){
+                List<Map<String, Object>> keyValue  = dbTransmitVo.getKeyValue();
+                List<String> keyName = new ArrayList<>();
+                List<String> value = new ArrayList<>();
+
+                for (Map<String, Object> entry  : keyValue) {
+                    Set<String> keySet = entry.keySet();
+                    for (String key : keySet) {
+                        keyName.add(key);
+                        value.add(entry.get(key).toString());
+                    }
+                }
+                dbTransmitPo = idbTransmitService.dBTransmit(dbTransmitVo.getTableName(), keyName.toArray(new String[0]),value.toArray(new String[0]), dbTransmitVo.getFieldName());//全字段更新
             }
+
         }
+
         return R.success();
     }
 

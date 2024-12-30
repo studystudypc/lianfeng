@@ -3,6 +3,9 @@ package com.lianfeng.vo;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * @version 1.8
  * @注释
@@ -19,14 +22,14 @@ public class DBTransmitVo {
     String tableName;
 
     /**
-     * 逐渐名字
+     * 主键名字
      */
     String[] keyName;
 
     /**
-     * 主键值
+     * 键值，使用List<Map>来容纳不同键值对
      */
-    String[] keyValue;
+    private List<Map<String, Object>> keyValue;
 
     /**
      * 其它字段

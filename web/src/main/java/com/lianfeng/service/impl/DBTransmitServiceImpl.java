@@ -262,6 +262,10 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
             rows.add(row);
         }
 
+        if (rows.size() == 0){
+            throw new LFBusinessException("主键错误或者该字段在数据库中没查到");
+        }
+
         List<String> listSql = new ArrayList<>();
         for (Map<String, Object> row : rows) {
             StringBuilder sql = new StringBuilder("INSERT INTO " + tableName + "(");
@@ -393,7 +397,10 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
             for (String columnName : row.keySet()) {
                 if (!keyNameSet.contains(columnName)) {
                     fieldColumns.add(columnName);
-                    fieldValues.add(row.get(columnName) == null ? "NULL" : row.get(columnName).toString());
+                    Object columnValue = row.get(columnName);
+                    // 检查是否为字符串 "NULL"，如果是，则使用 NULL 关键字
+                    String valueToUse = (columnValue != null && columnValue.toString().equals("NULL")) ? "NULL" : columnValue == null ? "NULL" : "'" + columnValue.toString().replace("'", "''") + "'";
+                    fieldValues.add(valueToUse);
                 }
             }
 
@@ -407,7 +414,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
                     valuesSql.append(", ");
                 }
                 insertSql.append(keyColumns.get(i));
-                valuesSql.append("'").append(keyValues.get(i).replace("'", "''")).append("'");
+                valuesSql.append(keyValues.get(i));
             }
 
             for (int i = 0; i < fieldColumns.size(); i++) {
@@ -416,7 +423,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
                     valuesSql.append(", ");
                 }
                 insertSql.append(fieldColumns.get(i));
-                valuesSql.append("'").append(fieldValues.get(i).replace("'", "''")).append("'");
+                valuesSql.append(fieldValues.get(i));
             }
 
             insertSql.append(") ").append(valuesSql).append(")");
@@ -424,7 +431,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
                 if (i > 0) {
                     updateSql.append(", ");
                 }
-                updateSql.append(fieldColumns.get(i)).append(" = '").append(fieldValues.get(i).replace("'", "''")).append("'");
+                updateSql.append(fieldColumns.get(i)).append(" = ").append(fieldValues.get(i));
             }
 
             String finalSql = insertSql.toString() + " " + updateSql.toString();
