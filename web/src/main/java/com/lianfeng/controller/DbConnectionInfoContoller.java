@@ -4,6 +4,7 @@ import com.lianfeng.common.response.R;
 import com.lianfeng.model.entity.DbConnectionInfo;
 import com.lianfeng.po.CompareTablePo;
 import com.lianfeng.service.IDbConnectionInfoService;
+import com.lianfeng.vo.DBNameVo;
 import com.lianfeng.vo.DbConnectionInfoVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -62,4 +63,17 @@ public class DbConnectionInfoContoller {
         }
         return R.success("表结构相同");
     }
+
+    @ApiOperation(
+            value = "返回数据库表名",
+            notes = "返回数据库表名",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @GetMapping("tableName")
+    public R<List<DBNameVo>> tableName() throws SQLException {
+        List<DBNameVo> list = iDbConnectionInfoService.returnTableName();
+        return R.data(list);
+    }
+
 }

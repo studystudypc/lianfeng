@@ -11,6 +11,7 @@ import com.lianfeng.model.entity.DbConnectionInfo;
 import com.lianfeng.model.entity.ExampleTable;
 import com.lianfeng.po.CompareTablePo;
 import com.lianfeng.service.IDbConnectionInfoService;
+import com.lianfeng.vo.DBNameVo;
 import com.lianfeng.vo.DbConnectionInfoVo;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,6 +84,34 @@ public class DbConnectionInfoServiceImpl extends ServiceImpl<DbConnectionInfoMap
         }
         compareTablePo.setTableName(table);
         return compareTablePo;
+    }
+
+    /**
+     * 返回数据库的表名
+     * @return
+     */
+    @Override
+    public List<DBNameVo> returnTableName() throws SQLException {
+        List<DBNameVo> list = new ArrayList<>();
+        LambdaQueryWrapper<DbConnectionInfo> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(DbConnectionInfo::getIsDeleted, LFanConstants.ZERO_INT); // 0未删除
+        List<DbConnectionInfo> dbConnectionInfoList = list(queryWrapper);
+
+        if (dbConnectionInfoList.size() < 2) {
+            throw new LFBusinessException("数据库连接信息不足");
+        }
+        DbConnectionInfo sourceInfo = dbConnectionInfoList.get(0); // 第一个数据源
+        Connection connection = JdbcUtil.getConnection(sourceInfo.getDbUrl(), sourceInfo.getDbUsername(), sourceInfo.getDbPassword());
+        DatabaseMetaData metaData = connection.getMetaData();
+        ResultSet resultSet = metaData.getTables(null, null, "%", new String[]{"TABLE"});
+        while (resultSet.next()){
+            DBNameVo dbNameVo = new DBNameVo();
+            String table = resultSet.getString("TABLE_NAME");
+            dbNameVo.setTableName(table);
+            list.add(dbNameVo);
+        }
+
+        return list;
     }
 
     /**********************************private**********************************/

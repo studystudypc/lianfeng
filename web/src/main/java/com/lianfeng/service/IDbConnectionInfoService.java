@@ -3,9 +3,11 @@ package com.lianfeng.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.lianfeng.model.entity.DbConnectionInfo;
 import com.lianfeng.po.CompareTablePo;
+import com.lianfeng.vo.DBNameVo;
 import com.lianfeng.vo.DbConnectionInfoVo;
 
 import java.sql.SQLException;
+import java.util.List;
 
 /**
 * @author LCP
@@ -25,4 +27,6 @@ public interface IDbConnectionInfoService extends IService<DbConnectionInfo> {
      * @return
      */
     CompareTablePo compareTable(String table) throws SQLException;
+
+    List<DBNameVo> returnTableName() throws SQLException;
 }

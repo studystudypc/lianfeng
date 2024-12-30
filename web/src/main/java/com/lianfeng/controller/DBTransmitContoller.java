@@ -41,7 +41,7 @@ public class DBTransmitContoller {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     @PostMapping("listTransmit")
-    public R<DBTransmitPo> dbTransmitPo(@RequestBody  List<DBTransmitVo> list) throws SQLException {
+    public R<DBTransmitPo> dbTransmitPo(@RequestBody List<DBTransmitVo> list) throws SQLException {
         DBTransmitPo dbTransmitPo = null;
         for (DBTransmitVo dbTransmitVo : list) {
             if (StringUtils.isBlank(dbTransmitVo.getTableName())){
@@ -63,10 +63,8 @@ public class DBTransmitContoller {
                 dbTransmitPo = idbTransmitService.dBTransmit(dbTransmitVo.getTableName(),dbTransmitVo.getKeyName(),dbTransmitVo.getKeyValue(),dbTransmitVo.getFieldName());//全字段更新
             }
         }
-
         return R.success();
     }
-
 
   /*  @ApiOperation(
             value = "数据库传输接口",
