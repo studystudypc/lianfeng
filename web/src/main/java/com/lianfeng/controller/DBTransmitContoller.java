@@ -45,6 +45,64 @@ public class DBTransmitContoller {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     @PostMapping("listTransmit")
+    public R<DBTransmitPo> dbTransmitPo(@RequestBody DBTransmitVo dbTransmitVo) throws SQLException {
+        DBTransmitPo dbTransmitPo = null;
+        if (StringUtils.isBlank(dbTransmitVo.getTableName())){
+            throw new LFBusinessException("表名不能为空");
+        }
+        if (ArrayUtils.isEmpty(dbTransmitVo.getKeyName())){
+            throw new LFBusinessException("主键名称不能为空");
+        }
+        if (CollectionUtils.isEmpty(dbTransmitVo.getKeyValue()) && ArrayUtils.isEmpty(dbTransmitVo.getFieldName())){
+            dbTransmitPo = idbTransmitService.dBTransmit(dbTransmitVo.getTableName(),dbTransmitVo.getKeyName());//全表传输
+        }
+        if(CollectionUtils.isEmpty(dbTransmitVo.getKeyValue()) && !ArrayUtils.isEmpty(dbTransmitVo.getFieldName())){
+            dbTransmitPo = idbTransmitService.dBTransmit(dbTransmitVo.getTableName(),dbTransmitVo.getKeyName(),dbTransmitVo.getFieldName());//需要更新的字段
+        }
+        if (ArrayUtils.isEmpty(dbTransmitVo.getFieldName()) && !CollectionUtils.isEmpty(dbTransmitVo.getKeyValue())){//需要更新的主键
+            List<Map<String, Object>> keyValue  = dbTransmitVo.getKeyValue();
+            List<String> keyName = new ArrayList<>();
+            List<String> value = new ArrayList<>();
+
+            for (Map<String, Object> entry  : keyValue) {
+                Set<String> keySet = entry.keySet();
+                for (String key : keySet) {
+                    keyName.add(key);
+                    value.add(entry.get(key).toString());
+                }
+                dbTransmitPo = idbTransmitService.dBTransmitKey(dbTransmitVo.getTableName(),keyName.toArray(new String[0]),value.toArray(new String[0]));
+                keyName.clear();
+                value.clear();
+            }
+        }
+
+        if (!StringUtils.isEmpty(dbTransmitVo.getTableName()) && !ArrayUtils.isEmpty(dbTransmitVo.getKeyName()) && !CollectionUtils.isEmpty(dbTransmitVo.getKeyValue()) && !ArrayUtils.isEmpty(dbTransmitVo.getFieldName())){
+            List<Map<String, Object>> keyValue  = dbTransmitVo.getKeyValue();
+            List<String> keyName = new ArrayList<>();
+            List<String> value = new ArrayList<>();
+
+            for (Map<String, Object> entry  : keyValue) {
+                Set<String> keySet = entry.keySet();
+                for (String key : keySet) {
+                    keyName.add(key);
+                    value.add(entry.get(key).toString());
+                }
+                dbTransmitPo = idbTransmitService.dBTransmit(dbTransmitVo.getTableName(), keyName.toArray(new String[0]),value.toArray(new String[0]), dbTransmitVo.getFieldName());//全字段更新
+                keyName.clear();
+                value.clear();
+            }
+        }
+
+        return R.success();
+    }
+
+   /* @ApiOperation(
+            value = "数据库传输接口",
+            notes = "指定某个数据或某个字段上传数据库",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @PostMapping("listTransmit")
     public R<DBTransmitPo> dbTransmitPo(@RequestBody List<DBTransmitVo> list) throws SQLException {
         DBTransmitPo dbTransmitPo = null;
         for (DBTransmitVo dbTransmitVo : list) {
@@ -92,7 +150,7 @@ public class DBTransmitContoller {
         }
 
         return R.success();
-    }
+    }*/
 
   /*  @ApiOperation(
             value = "数据库传输接口",
