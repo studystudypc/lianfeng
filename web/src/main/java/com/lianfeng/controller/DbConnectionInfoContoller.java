@@ -1,16 +1,12 @@
 package com.lianfeng.controller;
 
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.lianfeng.common.response.R;
 import com.lianfeng.model.entity.DbConnectionInfo;
 import com.lianfeng.po.CompareTablePo;
-import com.lianfeng.po.DbConnectionInfoPo;
 import com.lianfeng.service.IDbConnectionInfoService;
 import com.lianfeng.vo.DbConnectionInfoVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
