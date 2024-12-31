@@ -1,259 +1,241 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>数据库传输</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/layui-src/dist/css/layui.css">
+    <script src="https://cdn.jsdelivr.net/npm/layui-src/dist/layui.all.js"></script>
+
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
+        .layui-table thead th {
+            background-color: green; /* 设置表头背景颜色为绿色 */
+            color: white; /* 设置表头文字颜色为白色 */
         }
-        .container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            max-width: 1200px;
-            margin: auto;
-        }
-        .upload-container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        h2 {
-            text-align: center;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            font-weight: bold;
-        }
-        .form-group input[type="file"],
-        .form-group input[type="text"],
-        .form-group select {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            box-sizing: border-box;
-        }
-        .form-group button {
-            width: 100%;
-            padding: 8px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .form-group button:hover {
-            background-color: #0056b3;
-        }
-        .message {
-            margin-top: 20px;
-            text-align: center;
-        }
-
-        .home-button {
-            padding: 10px 20px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            display: block;
-            margin: 20px auto;
-            text-align: center;
-        }
-
-        .home-button:hover {
-            background-color: #218838;
-        }
-
-        .container {
-            margin-top: 20px;
-        }
-        .input-group {
-            margin-bottom: 10px;
-        }
-        .input-field {
-            padding: 8px;
-            margin-right: 10px;
-        }
-        .add-btn {
-            padding: 8px 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        .add-btn:hover {
-            background-color: #45a049;
-        }
-
     </style>
-
 </head>
 <body>
-<div class="container">
-    <div class="upload-container">
-        <h2>数据库传输</h2>
-        <form id="uploadForm">
-            <div class="form-group">
-                <label for="name">数据库表名：</label>
-                <input type="text" id="name" name="name" placeholder="请输入表名" required>
-            </div>
-            <!-- ... existing code ... -->
-            <div class="form-group">
-                <label for="primaryKey1">主键字段1：</label>
-                <select id="primaryKey1" name="idName1">
-                    <option value="null">请选择</option> <!-- 添加 null 选项 -->
+<div style="text-align: center; margin-bottom: 20px;"> <!-- 中间对齐 -->
+    <h2>数据库传输</h2> <!-- 添加标题 -->
+</div>
+<div id="tableContainer">
+    <table class="layui-table">
+        <thead>
+        <tr>
+            <th>表名</th>
+            <th>主键字段</th>
+            <th>主键字段值</th>
+            <th>字段</th>
+            <th>勾选主键</th>
+        </tr>
+        </thead>
+        <tbody id="tableBody">
+        <tr>
+            <td>
+                <select class="layui-input" id="tableSelect">
+                    <option value="">请选择</option>
+                    <option value="表1">表1</option>
+                    <option value="表2">表2</option>
+                    <option value="表3">表3</option>
+                    <option value="表4">表4</option>
+                    <option value="表5">表5</option>
+                </select>
+            </td>
+            <td>dict_id</td>
+            <td><input type="text" class="layui-input" placeholder="请输入主键字段值"></td>
+            <td>
+                <select class="layui-input">
+                    <option value="">请选择</option>
                     <option value="dict_id">dict_id</option>
                     <option value="key_words">key_words</option>
                     <option value="vendor">vendor</option>
                     <option value="account">account</option>
                 </select>
-                <input type="text" id="keyValue1" placeholder="请输入主键字段1的值">
-            </div>
-            <div class="form-group">
-                <label for="primaryKey2">主键字段2：</label>
-                <select id="primaryKey2" name="idName2">
-                    <option value="null">请选择</option> <!-- 添加 null 选项 -->
+            </td>
+            <td><input type="checkbox" checked>
+        </tr>
+        <tr>
+            <td></td>
+            <td>key_words</td>
+            <td><input type="text" class="layui-input" placeholder="请输入主键字段值"></td>
+            <td>
+                <select class="layui-input">
+                    <option value="">请选择</option>
                     <option value="dict_id">dict_id</option>
                     <option value="key_words">key_words</option>
                     <option value="vendor">vendor</option>
                     <option value="account">account</option>
                 </select>
-                <input type="text" id="keyValue2" placeholder="请输入主键字段2的值">
-            </div>
-            <div class="form-group">
-                <label for="primaryKey3">主键字段3：</label>
-                <select id="primaryKey3" name="idName3">
-                    <option value="null">请选择</option> <!-- 添加 null 选项 -->
+            </td>
+            <td><input type="checkbox">
+        </tr>
+        <tr>
+            <td></td>
+            <td>vendor</td>
+            <td><input type="text" class="layui-input" placeholder="请输入主键字段值"></td>
+            <td>
+                <select class="layui-input">
+                    <option value="">请选择</option>
                     <option value="dict_id">dict_id</option>
                     <option value="key_words">key_words</option>
                     <option value="vendor">vendor</option>
                     <option value="account">account</option>
                 </select>
-                <input type="text" id="keyValue3" placeholder="请输入主键字段3的值">
-            </div>
-            <div class="form-group">
-                <label for="primaryKey4">主键字段4：</label>
-                <select id="primaryKey4" name="idName4">
-                    <option value="null">请选择</option> <!-- 添加 null 选项 -->
+            </td>
+            <td><input type="checkbox">
+        </tr>
+        <tr>
+            <td></td>
+            <td>account</td>
+            <td><input type="text" class="layui-input" placeholder="请输入主键字段值"></td>
+            <td>
+                <select class="layui-input">
+                    <option value="">请选择</option>
                     <option value="dict_id">dict_id</option>
                     <option value="key_words">key_words</option>
                     <option value="vendor">vendor</option>
                     <option value="account">account</option>
                 </select>
-                <input type="text" id="keyValue4" placeholder="请输入主键字段4的值">
-            </div>
-            <div class="container">
-                <label>字段名:</label>
-                <div id="inputContainer">
-                    <div class="input-group">
-                        <input type="text" class="input-field" name="field" placeholder="请输入内容">
-                    </div>
-                </div>
-                <button type="button" class="add-btn" id="addFieldBtn">增加字段</button>
-            </div>
-            <div class="form-group">
-                <button type="submit">提交表单</button>
-            </div>
-        </form>
-        <!-- 回到首页按钮 -->
-        <button class="home-button"><a href="index.html">回到首页</a></button>
+            </td>
+            <td><input type="checkbox">
+        </tr>
+        </tbody>
+    </table>
+    <div style="text-align: center; margin-top: 20px;">
+        <button id="addRow" class="layui-btn">添加表格</button>
+        <button id="submitButton" class="layui-btn layui-btn-normal">提交表格</button>
     </div>
 </div>
 
 <script>
+    // 获取表名数据并填充下拉框
+    function fetchTableNames() {
+        fetch('DB/tableName') // 接口路径
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    const tableSelect = document.getElementById('tableSelect');
+                    // 清空现有选项
+                    tableSelect.innerHTML = '<option value="">请选择</option>';
+                    // 遍历 data 中的 tableName 并添加到下拉框
+                    data.data.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.tableName;
+                        option.textContent = item.tableName;
+                        tableSelect.appendChild(option);
+                    });
+                } else {
+                    console.error('获取表名失败:', data.message);
+                }
+            })
+            .catch(error => console.error('请求错误:', error));
+    }
 
-
-    document.getElementById('addFieldBtn').addEventListener('click', function () {
-        var inputContainer = document.getElementById('inputContainer');
-        var newInputGroup = document.createElement('div');
-        newInputGroup.classList.add('input-group');
-
-        var newInput = document.createElement('input');
-        newInput.type = 'text';
-        newInput.classList.add('input-field');
-        newInput.name = 'field' + (inputContainer.children.length + 1);
-        newInput.placeholder = '请输入内容';
-
-        newInputGroup.appendChild(newInput);
-        inputContainer.appendChild(newInputGroup);
+    // 页面加载时获取表名
+    window.onload = function() {
+        fetchTableNames();
+    };
+    // 监听下拉框的变化
+    document.getElementById('tableSelect').addEventListener('change', function() {
+        var selectedValue = this.value;
+        console.log("选中的表名:", selectedValue); // 可以根据需要处理选中的表名
     });
 
+    // 添加行的功能
+    document.getElementById('addRow').addEventListener('click', function() {
+        var tableBody = document.getElementById('tableBody');
+        var newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td></td>
+            <td><input type="text" class="layui-input" placeholder="请输入主键字段"></td>
+            <td><input type="text" class="layui-input" placeholder="请输入主键字段值"></td>
+            <td>
+                <select class="layui-input">
+                    <option value="">请选择</option>
+                    <option value="dict_id">dict_id</option>
+                    <option value="key_words">key_words</option>
+                    <option value="vendor">vendor</option>
+                    <option value="account">account</option>
+                </select>
+            </td>
+            <td><input type="checkbox">
+            </td>
+        `;
+        tableBody.appendChild(newRow);
+    });
 
-
-    // 修改表单提交部分
-    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const formData = new FormData(document.getElementById('uploadForm'));
-        const tableName = document.getElementById('name').value;
-
-        // 确保将 tableName 添加到 formData 中
-        formData.append('tableName', tableName);
-
-        // 创建数组收集主键字段值
-        const keyName = [];
-        const keyValue = [];
-
-        for (let i = 1; i <= 4; i++) {
-            const keyNameInput = document.getElementById(`primaryKey${i}`);
-            const keyValueInput = document.getElementById(`keyValue${i}`);
-            // 检查主键字段是否有值
-            if (keyNameInput && keyNameInput.value.trim() !== "null" && keyValueInput.value.trim()) {
-                keyName.push(keyNameInput.value.trim()); // 只有在有值时才添加到 keyName
-                keyValue.push(keyValueInput.value.trim());
-            }
+    // 提交表单数据到后端
+    function submitData() {
+        const tableSelect = document.getElementById('tableSelect');
+        if (!tableSelect || !tableSelect.value) {
+            alert("请选择表名！");
+            return;
         }
 
-        // 直接将数组添加到 formData
-        formData.append('keyName', JSON.stringify(keyName));
-        formData.append('keyValue', JSON.stringify(keyValue));
+        const rows = document.querySelectorAll('#tableBody tr');
+        const formData = {
+            tableName: tableSelect.value,
+            fieldName: [],
+            keyName: [],
+            keyValue: []
+        };
 
-        // 创建一个字段名数组
-        const fieldName = [];
-        const inputFields = document.querySelectorAll('#inputContainer input[type="text"]');
-        inputFields.forEach(input => {
-            if (input.value.trim()) {
-                fieldName.push(input.value.trim()); // 只有在输入框有值时才加入数组
+
+        rows.forEach(row => {
+            const checkbox = row.querySelector('td:nth-child(5) input');
+            const keyField = row.querySelector('td:nth-child(2)').textContent?.trim(); // 读取主键字段
+            const keyFieldValue = row.querySelector('td:nth-child(3) input')?.value?.trim(); // 读取主键字段值
+            const fieldNameValue = row.querySelector('td:nth-child(4) select')?.value?.trim(); // 读取字段名
+
+            if (checkbox?.checked) {
+                if (!formData.keyName.includes(keyField)) {
+                    formData.keyName.push(keyField); // 添加主键字段
+                }
+            }
+
+            // 检查复选框是否被选中并验证主键字段和主键字段值
+            if (checkbox?.checked && keyField && keyFieldValue) {
+                if (!formData.keyName.includes(keyField)) {
+                    formData.keyName.push(keyField); // 添加主键字段到 keyName
+                }
+                formData.keyValue.push({ [keyField]: keyFieldValue }); // 添加主键字段值到 keyValue
+            }
+
+            // 检查字段名是否存在
+            if (fieldNameValue) {
+                if (!formData.fieldName.includes(fieldNameValue)) {
+                    formData.fieldName.push(fieldNameValue);
+                }
             }
         });
 
-        // 将字段名数组添加到 formData
-        formData.append('fieldName', JSON.stringify(fieldName));
-
-        // 发送 POST 请求
-        try {
-            const response = await fetch('DBTransmit/Transmit', { // 替换为实际接口路径
-                method: 'POST',
-                body: formData,
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                // 处理成功响应
-                console.log('提交成功:', result);
-            } else {
-                // 处理错误响应
-                console.error('提交失败:', response.statusText);
-            }
-        } catch (error) {
-            console.error('请求错误:', error);
+        // 如果主键字段为空，自动添加默认字段 dict_id
+        if (!formData.keyName.includes('dict_id')) {
+            formData.keyName.push('dict_id');
         }
-    });
 
 
+        // 发送数据到后端
+        fetch('DBTransmit/listTransmit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    alert('数据提交成功: ' + data.message);
+                } else {
+                    alert('提交失败: ' + data.message);
+                }
+            })
+            .catch(error => alert('请求错误: ' + error));
+    }
 
 
+    // 绑定提交按钮事件
+    document.getElementById('submitButton').addEventListener('click', submitData);
 </script>
 </body>
 </html>
