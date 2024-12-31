@@ -197,7 +197,11 @@
                 if (!formData.keyName.includes(keyField)) {
                     formData.keyName.push(keyField); // 添加主键字段到 keyName
                 }
-                formData.keyValue.push({ [keyField]: keyFieldValue }); // 添加主键字段值到 keyValue
+                // 处理多个主键字段值
+                const values = keyFieldValue.split(',').map(val => val.trim()); // 将逗号分隔的值拆分并去掉空格
+                values.forEach(value => {
+                    formData.keyValue.push({ [keyField]: value }); // 添加到 keyValue 数组
+                });
             }
 
             // 检查字段名是否存在
