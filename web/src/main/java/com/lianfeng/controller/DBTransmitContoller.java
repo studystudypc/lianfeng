@@ -24,6 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.lianfeng.common.response.ResponseCode.PRIMARY_KEY_NOT_FOUND;
+import static com.lianfeng.common.response.ResponseCode.TABLE_NAME_CANNOT_BE_NULL;
+
 /**
  * @version 1.8
  * @注释  传输数据库模块
@@ -48,10 +51,10 @@ public class DBTransmitContoller {
     public R<DBTransmitPo> dbTransmitPo(@RequestBody DBTransmitVo dbTransmitVo) throws SQLException {
         DBTransmitPo dbTransmitPo = null;
         if (StringUtils.isBlank(dbTransmitVo.getTableName())){
-            throw new LFBusinessException("表名不能为空");
+            throw new LFBusinessException(TABLE_NAME_CANNOT_BE_NULL.getCode(),TABLE_NAME_CANNOT_BE_NULL.getDesc());
         }
         if (ArrayUtils.isEmpty(dbTransmitVo.getKeyName())){
-            throw new LFBusinessException("主键名称不能为空");
+            throw new LFBusinessException(PRIMARY_KEY_NOT_FOUND.getCode(),PRIMARY_KEY_NOT_FOUND.getDesc());
         }
         if (CollectionUtils.isEmpty(dbTransmitVo.getKeyValue()) && ArrayUtils.isEmpty(dbTransmitVo.getFieldName())){
             dbTransmitPo = idbTransmitService.dBTransmit(dbTransmitVo.getTableName(),dbTransmitVo.getKeyName());//全表传输

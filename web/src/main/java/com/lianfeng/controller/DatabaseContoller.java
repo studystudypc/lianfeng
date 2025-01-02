@@ -13,6 +13,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.naming.Name;
 
+import static com.lianfeng.common.response.ResponseCode.FILE_UPLOAD_EMPTY;
+
 
 @Api(tags = "系统模块")
 @RequestMapping("dict")
@@ -35,7 +37,7 @@ public class DatabaseContoller {
     @PostMapping("uploadExcel")
     public R<DatabasePo> uploadExcel(@RequestPart("file") MultipartFile file, @RequestParam("name") String name, @RequestParam("idName") String idName) {
         if (file.isEmpty() || name.isEmpty()) {
-            return R.fail("文件上传为空或文件名字为空");
+            return R.fail(FILE_UPLOAD_EMPTY);
         }
         DatabasePo databasePo = iDatabaseService.uploadExcel(file, name, idName);
         return R.data(databasePo);
@@ -50,7 +52,7 @@ public class DatabaseContoller {
     @PostMapping("returnRever")
     public R<DatabasePo> returnReverso(@RequestPart("file") MultipartFile file) {
         if (file.isEmpty()) {
-            return R.fail("文件上传为空或文件名字为空");
+            return R.fail(FILE_UPLOAD_EMPTY);
         }
         DatabasePo databasePo = iDatabaseService.returnReverso(file);
         return R.data(databasePo);
@@ -88,7 +90,7 @@ public class DatabaseContoller {
     @PostMapping("moreUpdateField")
     public R<DatabasePo> moreUpdateField(@RequestPart("file") MultipartFile file, String tableName, String[] keyName,String[] field) {
         if (file.isEmpty()) {
-            return R.fail("文件上传为空或文件名字为空");
+            return R.fail(FILE_UPLOAD_EMPTY);
         }
 
         DatabasePo databasePo = iDatabaseService.moreUpdateField(file, tableName, keyName , field);
