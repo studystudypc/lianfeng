@@ -23,6 +23,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
 
+import static com.lianfeng.common.response.ResponseCode.*;
+
 
 @Service
 public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> implements IDatabaseService {
@@ -85,7 +87,7 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
 
         // 如果找不到主键，抛出异常
         if (index == -1) {
-            throw new LFBusinessException("指定的 主键 未在表头中找到。");
+            throw new LFBusinessException(PRIMARY_KEY_NOT_FOUND);
         }
 
         // 拼接表头字段
@@ -211,7 +213,7 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
             }
         }
         if (flag) {
-            throw new LFBusinessException("指定的 主键 未在表头中找到。");
+            throw new LFBusinessException(PRIMARY_KEY_NOT_FOUND.getCode(),PRIMARY_KEY_NOT_FOUND.getDesc());
         }
 
         int[] indices = new int[field.length]; // filed与reversoName对应的下标
@@ -329,7 +331,7 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
         // 验证主键是否存在于表头
         for (int index : keyIndexes) {
             if (index == -1) {
-                throw new LFBusinessException("指定的 主键 未在表头中找到。");
+                throw new LFBusinessException(PRIMARY_KEY_NOT_FOUND.getCode(),PRIMARY_KEY_NOT_FOUND.getDesc());
             }
         }
 
@@ -364,7 +366,7 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
                 }
                 String[] fieldParts = field[i].split("=");
                 if (fieldParts.length != 2) {
-                    throw new LFBusinessException("字段格式错误，必须为 key=value 格式");
+                    throw new LFBusinessException(INVALID_FIELD_FORMAT.getCode(),INVALID_FIELD_FORMAT.getDesc());
                 }
                 String fieldName = fieldParts[0].trim();
                 String fieldValue = fieldParts[1].trim();
@@ -564,7 +566,7 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
         File targetFile = new File(dir, fileName);
 
         if (targetFile.exists()) {
-            throw new LFBusinessException("点击请勿频繁，请稍等重试");
+            throw new LFBusinessException(FREQUENT_CLICK.getCode(),FREQUENT_CLICK.getDesc());
         }
 
         try {
@@ -572,7 +574,7 @@ public class DatabaseServicelmpl extends ServiceImpl<DatabaseMapper, Object> imp
             Path filePath = Paths.get(targetFile.getAbsolutePath());
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            throw new LFBusinessException("文件上传失败");
+            throw new LFBusinessException(FILE_UPLOAD_FAILED.getCode(),FILE_UPLOAD_FAILED.getDesc());
         }
 
         return targetFile.getAbsolutePath(); // 返回文件的绝对路径

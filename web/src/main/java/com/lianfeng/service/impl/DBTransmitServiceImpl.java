@@ -16,6 +16,9 @@ import org.springframework.stereotype.Service;
 import java.sql.*;
 import java.util.*;
 
+import static com.lianfeng.common.response.ResponseCode.DATABASE_CONNECTION_INSUFFICIENT;
+import static com.lianfeng.common.response.ResponseCode.PRIMARY_KEY_NOT_FOUND;
+
 /**
  * @version 1.8
  * @注释
@@ -46,7 +49,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
         queryWrapper.eq(DbConnectionInfo::getIsDeleted, LFanConstants.ZERO_INT); // 0未删除
         List<DbConnectionInfo> list = iDbConnectionInfoService.list(queryWrapper);//数据源信息
         if (list.size() < 2) {
-            throw new LFBusinessException("数据库连接信息不足");
+            throw new LFBusinessException(DATABASE_CONNECTION_INSUFFICIENT.getCode(),DATABASE_CONNECTION_INSUFFICIENT.getDesc());
         }
         StringBuilder sqlSelect = new StringBuilder("SELECT ");//查询多主键的sql
         for (int i = 0; i < keyName.length; i++) {
@@ -92,7 +95,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
         queryWrapper.eq(DbConnectionInfo::getIsDeleted, LFanConstants.ZERO_INT); // 0未删除
         List<DbConnectionInfo> list = iDbConnectionInfoService.list(queryWrapper);//数据源信息
         if (list.size() < 2) {
-            throw new LFBusinessException("数据库连接信息不足");
+            throw new LFBusinessException(DATABASE_CONNECTION_INSUFFICIENT.getCode(),DATABASE_CONNECTION_INSUFFICIENT.getDesc());
         }
         DbConnectionInfo sourceInfo = list.get(0); // 第一个数据源
         DbConnectionInfo targetInfo = list.get(1); // 第二个数据源
@@ -127,7 +130,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
         queryWrapper.eq(DbConnectionInfo::getIsDeleted, LFanConstants.ZERO_INT); // 0未删除
         List<DbConnectionInfo> list = iDbConnectionInfoService.list(queryWrapper);//数据源信息
         if (list.size() < 2) {
-            throw new LFBusinessException("数据库连接信息不足");
+            throw new LFBusinessException(DATABASE_CONNECTION_INSUFFICIENT.getCode(),DATABASE_CONNECTION_INSUFFICIENT.getDesc());
         }
         DbConnectionInfo sourceInfo = list.get(0); // 第一个数据源
         DbConnectionInfo targetInfo = list.get(1); // 第二个数据源
@@ -169,7 +172,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
         queryWrapper.eq(DbConnectionInfo::getIsDeleted, LFanConstants.ZERO_INT); // 0未删除
         List<DbConnectionInfo> list = iDbConnectionInfoService.list(queryWrapper);//数据源信息
         if (list.size() < 2) {
-            throw new LFBusinessException("数据库连接信息不足");
+            throw new LFBusinessException(DATABASE_CONNECTION_INSUFFICIENT.getCode(),DATABASE_CONNECTION_INSUFFICIENT.getDesc());
         }
         DbConnectionInfo sourceInfo = list.get(0); // 第一个数据源
         DbConnectionInfo targetInfo = list.get(1); // 第二个数据源
@@ -263,7 +266,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
         }
 
         if (rows.size() == 0){
-            throw new LFBusinessException("主键错误或者该字段在数据库中没查到");
+            throw new LFBusinessException(PRIMARY_KEY_NOT_FOUND.getCode(),DATABASE_CONNECTION_INSUFFICIENT.getDesc());
         }
 
         List<String> listSql = new ArrayList<>();

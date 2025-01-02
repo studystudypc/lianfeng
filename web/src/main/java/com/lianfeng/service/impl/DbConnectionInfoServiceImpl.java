@@ -26,6 +26,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
 
+import static com.lianfeng.common.response.ResponseCode.*;
+
 
 /**
  * @author LCP
@@ -65,7 +67,7 @@ public class DbConnectionInfoServiceImpl extends ServiceImpl<DbConnectionInfoMap
         List<DbConnectionInfo> list = list(queryWrapper);
 
         if (list.size() < 2) {
-            throw new LFBusinessException("数据库连接信息不足");
+            throw new LFBusinessException(DATABASE_CONNECTION_INSUFFICIENT.getCode(),DATABASE_CONNECTION_INSUFFICIENT.getDesc());
         }
 
         DbConnectionInfo sourceInfo = list.get(0); // 第一个数据源
@@ -98,7 +100,7 @@ public class DbConnectionInfoServiceImpl extends ServiceImpl<DbConnectionInfoMap
         List<DbConnectionInfo> dbConnectionInfoList = list(queryWrapper);
 
         if (dbConnectionInfoList.size() < 2) {
-            throw new LFBusinessException("数据库连接信息不足");
+            throw new LFBusinessException(DATABASE_CONNECTION_INSUFFICIENT);
         }
         DbConnectionInfo sourceInfo = dbConnectionInfoList.get(0); // 第一个数据源
         Connection connection = JdbcUtil.getConnection(sourceInfo.getDbUrl(), sourceInfo.getDbUsername(), sourceInfo.getDbPassword());
@@ -134,9 +136,9 @@ public class DbConnectionInfoServiceImpl extends ServiceImpl<DbConnectionInfoMap
             }
         } catch (SQLException e) {
             if (e.getSQLState().equals("42S02")) { // 42S02是MySQL表不存在的状态码
-                throw new LFBusinessException(tableName + " 数据库表不存在");
+                throw new LFBusinessException(DATABASE_TABLE_NOT_EXIST.getCode(),tableName + DATABASE_TABLE_NOT_EXIST.getDesc());
             } else {
-                throw new LFBusinessException("查询表结构时发生错误: " + e.getMessage());
+                throw new LFBusinessException(QUERY_TABLE_STRUCTURE_ERROR.getCode(),QUERY_TABLE_STRUCTURE_ERROR.getDesc());
             }
         }
         return tables;
@@ -168,7 +170,7 @@ public class DbConnectionInfoServiceImpl extends ServiceImpl<DbConnectionInfoMap
                 // 确保日志文件的目录存在
                 File logDir = logFile.getParentFile();
                 if (!logDir.exists() && !logDir.mkdirs()) {
-                    throw new LFBusinessException("无法创建日志文件目录");
+                    throw new LFBusinessException(LOG_FILE_DIRECTORY_CREATION_FAILED.getCode(),LOG_FILE_DIRECTORY_CREATION_FAILED.getDesc());
                 }
 
                 // 写入差异信息到日志文件
