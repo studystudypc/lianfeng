@@ -41,7 +41,7 @@
                 </select>
             </td>
             <td>dict_id</td>
-            <td><input type="text" class="layui-input" placeholder="请输入主键字段值"></td>
+            <td><input type="text" class="layui-input" placeholder="请输入主键字段值，用逗号分隔"></td>
             <td>
                 <select class="layui-input">
                     <option value="">请选择</option>
@@ -56,7 +56,7 @@
         <tr>
             <td></td>
             <td>key_words</td>
-            <td><input type="text" class="layui-input" placeholder="请输入主键字段值"></td>
+            <td><input type="text" class="layui-input" placeholder="请输入主键字段值，用逗号分隔"></td>
             <td>
                 <select class="layui-input">
                     <option value="">请选择</option>
@@ -71,7 +71,7 @@
         <tr>
             <td></td>
             <td>vendor</td>
-            <td><input type="text" class="layui-input" placeholder="请输入主键字段值"></td>
+            <td><input type="text" class="layui-input" placeholder="请输入主键字段值，用逗号分隔"></td>
             <td>
                 <select class="layui-input">
                     <option value="">请选择</option>
@@ -86,7 +86,7 @@
         <tr>
             <td></td>
             <td>account</td>
-            <td><input type="text" class="layui-input" placeholder="请输入主键字段值"></td>
+            <td><input type="text" class="layui-input" placeholder="请输入主键字段值，用逗号分隔"></td>
             <td>
                 <select class="layui-input">
                     <option value="">请选择</option>
@@ -178,7 +178,7 @@
             keyName: [],
             keyValue: []
         };
-
+        const keyValueMap = {}; // 用于存储分组的主键字段值
 
         rows.forEach(row => {
             const checkbox = row.querySelector('td:nth-child(5) input');
@@ -197,12 +197,17 @@
                 if (!formData.keyName.includes(keyField)) {
                     formData.keyName.push(keyField); // 添加主键字段到 keyName
                 }
-                // 处理多个主键字段值
-                const values = keyFieldValue.split(',').map(val => val.trim()); // 将逗号分隔的值拆分并去掉空格
-                values.forEach(value => {
-                    formData.keyValue.push({ [keyField]: value }); // 添加到 keyValue 数组
+                // 按照逗号分隔字段值并按字段名存储
+                const values = keyFieldValue?.split(',').map(val => val.trim()) || [];
+                values.forEach((value, index) => {
+                    if (!keyValueMap[index]) {
+                        keyValueMap[index] = {}; // 初始化每个分组
+                    }
+                    keyValueMap[index][keyField] = value; // 添加字段值
                 });
             }
+
+
 
             // 检查字段名是否存在
             if (fieldNameValue) {
@@ -211,6 +216,8 @@
                 }
             }
         });
+        // 将分组的字段值转换为数组格式
+        formData.keyValue = Object.values(keyValueMap);
 
         // 如果主键字段为空，自动添加默认字段 dict_id
         if (!formData.keyName.includes('dict_id')) {
