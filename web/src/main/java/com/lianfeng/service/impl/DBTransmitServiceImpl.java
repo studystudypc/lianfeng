@@ -5,11 +5,13 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lianfeng.common.constants.LFanConstants;
 import com.lianfeng.common.exception.LFBusinessException;
 import com.lianfeng.common.utils.JdbcUtil;
+import com.lianfeng.controller.WebSocket;
 import com.lianfeng.mapper.DBTransmitMapper;
 import com.lianfeng.model.entity.DbConnectionInfo;
 import com.lianfeng.po.DBTransmitPo;
 import com.lianfeng.service.IDBTransmitService;
 import com.lianfeng.service.IDbConnectionInfoService;
+import com.lianfeng.service.RedisService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,8 @@ import java.util.*;
 
 import static com.lianfeng.common.response.ResponseCode.DATABASE_CONNECTION_INSUFFICIENT;
 import static com.lianfeng.common.response.ResponseCode.PRIMARY_KEY_NOT_FOUND;
+import static com.lianfeng.constans.RedisConstant.PROGRESS_BAR_ALL;
+import static com.lianfeng.constans.WebSocketConstant.*;
 
 /**
  * @version 1.8
@@ -30,6 +34,13 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
 
     @Autowired
     private IDbConnectionInfoService iDbConnectionInfoService;
+
+    @Autowired
+    private RedisService redisService;
+
+    @Autowired
+    private WebSocket webSocket;
+
 
     /**
      * @Author liuchuanping
@@ -74,7 +85,9 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
         targetTransmit(targetInfo.getDbUsername(),
                 targetInfo.getDbPassword(),
                 targetInfo.getDbUrl(),
-                updateSql);
+                updateSql,
+                tableName);
+
 
         return dbTransmitPo;
     }
@@ -100,6 +113,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
         DbConnectionInfo sourceInfo = list.get(0); // 第一个数据源
         DbConnectionInfo targetInfo = list.get(1); // 第二个数据源
 
+
         List<String> updateSql = fieldNameConnection(sourceInfo.getDbUsername(),
                 sourceInfo.getDbPassword(),
                 sourceInfo.getDbUrl(),
@@ -110,7 +124,8 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
         fieldNamdBTransmit(targetInfo.getDbUsername(),
                 targetInfo.getDbPassword(),
                 targetInfo.getDbUrl(),
-                updateSql);
+                updateSql,
+                tableName);
 
         return dbTransmitPo;
     }
@@ -147,10 +162,12 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
 //        state_id = '8888',
 //                company_id = '9999';
 
+        redisService.setValue(PROGRESS_BAR_ALL + tableName,String.valueOf(updateSql.size()));
         keyValueBTransmit(targetInfo.getDbUsername(),
                 targetInfo.getDbPassword(),
                 targetInfo.getDbUrl(),
-                updateSql);
+                updateSql,
+                tableName);
 
         return dbTransmitPo;
     }
@@ -201,11 +218,13 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
                 fieldName,
                 tableName,
                 sqlSelect.toString());//查询源数据，拼接更新sql语句。
+        redisService.setValue(PROGRESS_BAR_ALL + tableName,String.valueOf(updateSql.size()));
 
         allBTransmit(targetInfo.getDbUsername(),
                 targetInfo.getDbPassword(),
                 targetInfo.getDbUrl(),
-                updateSql);
+                updateSql,
+                tableName);
 
         return dbTransmitPo;
     }
@@ -220,17 +239,24 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
      * @param updateSql
      * @throws SQLException
      */
-    private void allBTransmit(String dbUsername, String dbPassword, String dbUrl, List<String> updateSql) throws SQLException {
+    private void allBTransmit(String dbUsername, String dbPassword, String dbUrl, List<String> updateSql,String tableName) throws SQLException {
         Connection connection = JdbcUtil.getConnection(dbUrl, dbUsername, dbPassword); // 连接信息
         PreparedStatement preparedStatement = null;
+        int count = 0;
 
         for (String sql : updateSql) {
             preparedStatement = connection.prepareStatement(sql);
             preparedStatement.execute();
 //            ResultSetMetaData metaData = resultSet.getMetaData();
+            count++;
+            Object value = redisService.getValue(PROGRESS_BAR_ALL + tableName);
+            Integer allCount = Integer.valueOf(String.valueOf(value));
+            int i = (int) ((count * 100.0) / allCount);
+            webSocket.sendOneMessage(KEY_FIELD_TABLE + tableName,String.valueOf(i));
         }
         connection.close();
         preparedStatement.close();
+        redisService.deleteValue(PROGRESS_BAR_ALL);
     }
 
     /**
@@ -332,17 +358,25 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
      * @param updateSql
      * @throws SQLException
      */
-    private void keyValueBTransmit(String dbUsername, String dbPassword, String dbUrl, List<String> updateSql) throws SQLException {
+    private void keyValueBTransmit(String dbUsername, String dbPassword, String dbUrl, List<String> updateSql,String tableName) throws SQLException {
         Connection connection = JdbcUtil.getConnection(dbUrl, dbUsername, dbPassword); // 连接信息
         PreparedStatement preparedStatement = null;
+        int count = 0;
 
         for (String sql : updateSql) {
             preparedStatement = connection.prepareStatement(sql);
             preparedStatement.execute();
 //            ResultSetMetaData metaData = resultSet.getMetaData();
+            count++;
+            Object value = redisService.getValue(PROGRESS_BAR_ALL + tableName);
+            Integer allCount = Integer.valueOf(String.valueOf(value));
+            int i = (int) ((count * 100.0) / allCount); // 计算百分比
+            webSocket.sendOneMessage(KEY_TABLE + tableName, String.valueOf(i));
+
         }
         connection.close();
         preparedStatement.close();
+        redisService.deleteValue(PROGRESS_BAR_ALL);
     }
 
     /**
@@ -453,17 +487,25 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
      * @param dbUrl
      * @param updateSql
      */
-    private void fieldNamdBTransmit(String dbUsername, String dbPassword, String dbUrl, List<String> updateSql) throws SQLException {
+    private void fieldNamdBTransmit(String dbUsername, String dbPassword, String dbUrl, List<String> updateSql,String tableName) throws SQLException {
         Connection connection = JdbcUtil.getConnection(dbUrl, dbUsername, dbPassword); // 连接信息
         PreparedStatement preparedStatement = null;
+        int count = 0;
 
         for (String sql : updateSql) {
             preparedStatement = connection.prepareStatement(sql);
             preparedStatement.execute();
 //            ResultSetMetaData metaData = resultSet.getMetaData();
+            count++;
+            Object value = redisService.getValue(PROGRESS_BAR_ALL + tableName);
+            Integer allCount = Integer.valueOf(String.valueOf(value));
+            int i = (int) ((allCount * 100.0) / allCount);
+            webSocket.sendOneMessage(FIELD_TABLE+tableName,String.valueOf(i));
+
         }
         connection.close();
         preparedStatement.close();
+        redisService.deleteValue(PROGRESS_BAR_ALL + tableName);
     }
 
     /**
@@ -557,7 +599,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
             listSql.add(sql.toString());
         }
         JdbcUtil.release(connection, preparedStatement, resultSet);
-
+        redisService.setValue(PROGRESS_BAR_ALL + tableName,String.valueOf(listSql.size()));//总条数，显示进度条用的
         return listSql;
     }
 
@@ -569,17 +611,24 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
      * @param updateSql
      * @throws SQLException
      */
-    private void targetTransmit(String dbUsername, String dbPassword, String dbUrl, List<String> updateSql) throws SQLException {
+    private void targetTransmit(String dbUsername, String dbPassword, String dbUrl, List<String> updateSql,String tableName) throws SQLException {
         Connection connection = JdbcUtil.getConnection(dbUrl, dbUsername, dbPassword); // 连接信息
         PreparedStatement preparedStatement = null;
+        int count = 0;
 
         for (String sql : updateSql) {
             preparedStatement = connection.prepareStatement(sql);
             preparedStatement.execute();
+            count++;
 //            ResultSetMetaData metaData = resultSet.getMetaData();
+            Object value = redisService.getValue(PROGRESS_BAR_ALL + tableName);
+            Integer allCount = Integer.valueOf((String) value);
+            int i = (int) ((count * 100.0) / allCount); // 计算百分比
+            webSocket.sendOneMessage(ALL_TABLE + tableName, String.valueOf(i));
         }
         connection.close();
         preparedStatement.close();
+        redisService.deleteValue(PROGRESS_BAR_ALL + tableName);
     }
 
     /**
@@ -594,8 +643,21 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
      */
     private List<String> updateConnection(String dbUsername, String dbPassword, String dbUrl, String[] keyName, String tableName) throws SQLException {
         // 全表查询
+        String countSql = "SELECT COUNT(*) FROM " + tableName;//查询sql的条数，显示进度条用的
+
         String selectSql = "SELECT * FROM " + tableName;
         Connection connection = JdbcUtil.getConnection(dbUrl, dbUsername, dbPassword); // 连接信息
+
+        PreparedStatement countStatement = connection.prepareStatement(countSql);
+        ResultSet countResultSet = countStatement.executeQuery();
+        int rowCount = 0;//数据库的条数
+        if (countResultSet.next()) {
+            rowCount = countResultSet.getInt(1);
+        }
+        countResultSet.close();
+        countStatement.close();
+        redisService.setValue(PROGRESS_BAR_ALL + tableName ,String.valueOf(rowCount));
+
         PreparedStatement preparedStatement = connection.prepareStatement(selectSql);
         ResultSet resultSet = preparedStatement.executeQuery();
         ResultSetMetaData metaData = resultSet.getMetaData();
@@ -631,7 +693,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
             listSql.add(replaceSql.toString());
         }
 
-        JdbcUtil.getConnection(dbUrl,dbUsername,dbPassword); // 关闭连接
+        JdbcUtil.release(connection,preparedStatement,resultSet); // 关闭连接
 
         return listSql;
     }
