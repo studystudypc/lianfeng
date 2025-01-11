@@ -229,6 +229,38 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
         return dbTransmitPo;
     }
 
+    /**
+     * 返回某个表的字段名字
+     * @param name
+     * @return
+     */
+    @Override
+    public DBTransmitPo reField(String name) throws SQLException {
+        DBTransmitPo dbTransmitPo = new DBTransmitPo();
+
+        String sql  = "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE table_name = '" + name + "'";
+        LambdaQueryWrapper<DbConnectionInfo> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(DbConnectionInfo::getIsDeleted, LFanConstants.ZERO_INT); // 0未删除
+        List<DbConnectionInfo> list = iDbConnectionInfoService.list(queryWrapper);//数据源信息
+        if (list.size() < 2) {
+            throw new LFBusinessException(DATABASE_CONNECTION_INSUFFICIENT.getCode(),DATABASE_CONNECTION_INSUFFICIENT.getDesc());
+        }
+        DbConnectionInfo sourceInfo = list.get(0); // 第一个数据源
+
+        Connection connection = JdbcUtil.getConnection(sourceInfo.getDbUrl(), sourceInfo.getDbUsername(), sourceInfo.getDbPassword()); // 连接信息
+        PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        ResultSet resultSet = preparedStatement.executeQuery();
+
+        List<String> result = new ArrayList<>();
+        while (resultSet.next()) {
+            result.add(resultSet.getString("COLUMN_NAME"));
+        }
+        dbTransmitPo.setFieldName(result);
+
+        JdbcUtil.release(connection,preparedStatement,resultSet);
+        return dbTransmitPo;
+    }
+
     /****************************************************private*****************************************/
 
     /**
@@ -625,6 +657,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
             Integer allCount = Integer.valueOf((String) value);
             int i = (int) ((count * 100.0) / allCount); // 计算百分比
             webSocket.sendOneMessage(ALL_TABLE + tableName, String.valueOf(i));
+
         }
         connection.close();
         preparedStatement.close();

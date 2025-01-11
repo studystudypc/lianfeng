@@ -6,10 +6,11 @@
     <script>
         var ws;
         function connect() {
-            ws = new WebSocket("ws://127.0.0.1:8081/websocket/allTabledict");
+            // ws = new WebSocket("ws://127.0.0.1:8081/websocket/allTabledict");
             ws.onmessage = function(event) {
                 var progress = parseInt(event.data);
                 document.getElementById("progressBar").value = progress;
+                console.log('Message from server:', event.data);
             };
         }
         window.onload = connect;
