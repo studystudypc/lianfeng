@@ -48,4 +48,11 @@ public interface IDBTransmitService extends IService<Object> {
      * @return
      */
     DBTransmitPo dBTransmit(String tableName, String[] keyName, String[] keyValue, String[] fieldName) throws SQLException;
+
+    /**
+     * 返回某个表的字段名字
+     * @param name
+     * @return
+     */
+    DBTransmitPo reField(String name) throws SQLException;
 }

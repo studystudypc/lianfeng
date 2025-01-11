@@ -9,7 +9,7 @@ package com.lianfeng.constans;
 public interface WebSocketConstant {
 	public static final String ALL_TABLE = "allTable";
 	public static final String FIELD_TABLE = "fieldTable";
-	public static final String KEY_TABLE = "keyTable";
+	public static final String KEY_TABLE = "allTable";
 	public static final String KEY_FIELD_TABLE = "keyFieldTable";
 
 

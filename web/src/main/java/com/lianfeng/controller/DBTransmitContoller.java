@@ -99,5 +99,18 @@ public class DBTransmitContoller {
         return R.success();
     }
 
+    @ApiOperation(
+            value = "返回某个表的字段名字",
+            notes = "返回某个表的字段名字",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @PostMapping("reField")
+    public R<DBTransmitPo> reField(String name) throws SQLException {
+
+        DBTransmitPo dbTransmitPo = idbTransmitService.reField(name);
+        return R.data(dbTransmitPo);
+    }
+
 
 }
