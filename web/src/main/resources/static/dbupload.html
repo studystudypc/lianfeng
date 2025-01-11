@@ -295,7 +295,9 @@
                         if (!keyValueMap[index]) {
                             keyValueMap[index] = {}; // 初始化每个分组
                         }
-                        keyValueMap[index][keyField] = value; // 添加字段值
+                        if (keyField !== 'dict_id' || checkbox.checked) {
+                            keyValueMap[index][keyField] = value; // 添加字段值
+                        }
                     });
                 }
 
