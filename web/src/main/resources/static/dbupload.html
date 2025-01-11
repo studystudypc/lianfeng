@@ -11,6 +11,56 @@
             background-color: green; /* 设置表头背景颜色为绿色 */
             color: white; /* 设置表头文字颜色为白色 */
         }
+        /* 进度条容器样式 */
+        #progressBarContainer {
+            width: 100%; /* 设置宽度为100% */
+            background-color: #f3f3f3; /* 背景色 */
+            border-radius: 10px; /* 设置圆角 */
+            height: 25px; /* 设置高度 */
+            margin-top: 10px;
+            position: relative; /* 设置相对定位 */
+            display: flex; /* 使用flex布局 */
+            align-items: center; /* 垂直居中 */
+            justify-content: flex-start; /* 水平起始对齐 */
+        }
+
+        /* 进度条样式 */
+        #progressBar {
+            height: 100%; /* 进度条高度与容器一致 */
+            background-color: green; /* 进度条颜色 */
+            width: 0%; /* 初始宽度为0% */
+            border-radius: 10px; /* 设置圆角 */
+            position: absolute; /* 设置绝对定位 */
+            left: 0; /* 从左侧开始 */
+        }
+
+        /* 进度数值样式 */
+        #progressValue {
+            margin-left: 10px; /* 与进度条的间距 */
+            font-weight: bold; /* 字体加粗 */
+        }
+        /* 表格容器样式，添加滚动条 */
+        #tableContainer {
+            overflow-y: auto;
+            max-height: 400px; /* 设置最大高度 */
+            margin-bottom: 80px; /* 确保按钮不会被遮挡 */
+        }
+
+        /* 按钮容器样式，始终固定在页面底部 */
+        #buttonContainer {
+            position: fixed;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            background-color: white;
+            padding: 10px 0;
+            z-index: 10; /* 保证按钮在最上层 */
+        }
+
+        /* 添加按钮的底部间距 */
+        #tableContainer .layui-btn {
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -100,10 +150,16 @@
         </tr>
         </tbody>
     </table>
-    <div style="text-align: center; margin-top: 20px;">
+    <div id="buttonContainer">
         <button id="addRow" class="layui-btn">添加表格</button>
         <button id="submitButton" class="layui-btn layui-btn-normal">提交表格</button>
-    </div>
+        <button id="nextTableButton" class="layui-btn layui-btn-primary">下一张表</button> <!-- 新增按钮 -->
+        <br><br>
+        <div id="progressBarContainer">
+            <div id="progressBar"></div>
+            <span id="progressValue">0%</span>
+        </div>
+</div>
 </div>
 
 <script>
@@ -139,6 +195,19 @@
         var selectedValue = this.value;
         console.log("选中的表名:", selectedValue); // 可以根据需要处理选中的表名
     });
+    // WebSocket 连接方法
+    function connect() {
+        var tableSelect = document.getElementById('tableSelect');
+        var selectedTableName = tableSelect.value; // 获取选择的表名
+
+        // 建立 WebSocket 连接
+        var ws = new WebSocket("ws://127.0.0.1:8081/websocket/allTable" + selectedTableName); // 插入表名
+
+        ws.onmessage = function(event) {
+            // var progress = parseInt(event.data);
+            // document.getElementById("progressBar").value = progress;
+        };
+    }
 
     // 添加行的功能
     document.getElementById('addRow').addEventListener('click', function() {
@@ -163,6 +232,12 @@
         tableBody.appendChild(newRow);
     });
 
+    // 更新进度条函数
+    function updateProgressBar(progress) {
+        const progressBar = document.getElementById("progressBar");  // 假设进度条的 ID 是 progressBar
+        progressBar.style.width = progress + '%'; // 设置进度条宽度
+    }
+
     // 提交表单数据到后端
     function submitData() {
         const tableSelect = document.getElementById('tableSelect');
@@ -170,83 +245,123 @@
             alert("请选择表名！");
             return;
         }
+        const tables = document.querySelectorAll('#tableContainer > table');
 
-        const rows = document.querySelectorAll('#tableBody tr');
-        const formData = {
-            tableName: tableSelect.value,
-            fieldName: [],
-            keyName: [],
-            keyValue: []
-        };
-        const keyValueMap = {}; // 用于存储分组的主键字段值
+        tables.forEach((table,index) => {
 
-        rows.forEach(row => {
-            const checkbox = row.querySelector('td:nth-child(5) input');
-            const keyField = row.querySelector('td:nth-child(2)').textContent?.trim(); // 读取主键字段
-            const keyFieldValue = row.querySelector('td:nth-child(3) input')?.value?.trim(); // 读取主键字段值
-            const fieldNameValue = row.querySelector('td:nth-child(4) select')?.value?.trim(); // 读取字段名
+            const rows = document.querySelectorAll('#tableBody tr');
+            const formData = {
+                tableName: tableSelect.value,
+                tableIndex:index + 1,
+                fieldName: [],
+                keyName: [],
+                keyValue: []
+            };
+            const keyValueMap = {}; // 用于存储分组的主键字段值
 
-            if (checkbox?.checked) {
-                if (!formData.keyName.includes(keyField)) {
-                    formData.keyName.push(keyField); // 添加主键字段
-                }
-            }
+            rows.forEach(row => {
+                const checkbox = row.querySelector('td:nth-child(5) input');
+                const keyField = row.querySelector('td:nth-child(2)').textContent?.trim(); // 读取主键字段
+                const keyFieldValue = row.querySelector('td:nth-child(3) input')?.value?.trim(); // 读取主键字段值
+                const fieldNameValue = row.querySelector('td:nth-child(4) select')?.value?.trim(); // 读取字段名
 
-            // 检查复选框是否被选中并验证主键字段和主键字段值
-            if (checkbox?.checked && keyField && keyFieldValue) {
-                if (!formData.keyName.includes(keyField)) {
-                    formData.keyName.push(keyField); // 添加主键字段到 keyName
-                }
-                // 按照逗号分隔字段值并按字段名存储
-                const values = keyFieldValue?.split(',').map(val => val.trim()) || [];
-                values.forEach((value, index) => {
-                    if (!keyValueMap[index]) {
-                        keyValueMap[index] = {}; // 初始化每个分组
+                if (checkbox?.checked) {
+                    if (!formData.keyName.includes(keyField)) {
+                        formData.keyName.push(keyField); // 添加主键字段
                     }
-                    keyValueMap[index][keyField] = value; // 添加字段值
-                });
+                }
+
+                // 检查复选框是否被选中并验证主键字段和主键字段值
+                if (checkbox?.checked && keyField && keyFieldValue) {
+                    if (!formData.keyName.includes(keyField)) {
+                        formData.keyName.push(keyField); // 添加主键字段到 keyName
+                    }
+                    // 按照逗号分隔字段值并按字段名存储
+                    const values = keyFieldValue?.split(',').map(val => val.trim()) || [];
+                    values.forEach((value, index) => {
+                        if (!keyValueMap[index]) {
+                            keyValueMap[index] = {}; // 初始化每个分组
+                        }
+                        keyValueMap[index][keyField] = value; // 添加字段值
+                    });
+                }
+
+
+                // 检查字段名是否存在
+                if (fieldNameValue) {
+                    if (!formData.fieldName.includes(fieldNameValue)) {
+                        formData.fieldName.push(fieldNameValue);
+                    }
+                }
+            });
+            // 将分组的字段值转换为数组格式
+            formData.keyValue = Object.values(keyValueMap);
+
+            // 如果主键字段为空，自动添加默认字段 dict_id
+            if (!formData.keyName.includes('dict_id')) {
+                formData.keyName.push('dict_id');
+            }
+
+            // 如果 fieldName 数组为空，则不添加该字段到 formData
+            if (formData.fieldName.length === 0) {
+                delete formData.fieldName;  // 删除 fieldName 字段
             }
 
 
-
-            // 检查字段名是否存在
-            if (fieldNameValue) {
-                if (!formData.fieldName.includes(fieldNameValue)) {
-                    formData.fieldName.push(fieldNameValue);
-                }
-            }
-        });
-        // 将分组的字段值转换为数组格式
-        formData.keyValue = Object.values(keyValueMap);
-
-        // 如果主键字段为空，自动添加默认字段 dict_id
-        if (!formData.keyName.includes('dict_id')) {
-            formData.keyName.push('dict_id');
-        }
-
-
-        // 发送数据到后端
-        fetch('DBTransmit/listTransmit', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.code === 200) {
-                    alert('数据提交成功: ' + data.message);
-                } else {
-                    alert('提交失败: ' + data.message);
-                }
+            // 发送数据到后端
+            fetch('DBTransmit/listTransmit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
             })
-            .catch(error => alert('请求错误: ' + error));
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        alert('数据提交成功: ' + data.message);
+                        // 提交成功后启动 WebSocket 连接
+                        connect(formData.tableName); // 启动WebSocket连接并开始监听进度
+                        // 从0到100%缓慢增加进度条
+                        let progress = 0;
+                        const interval = setInterval(() => {
+                            if (progress < 100) {
+                                progress++;
+                                updateProgressBar(progress); // 更新进度条
+                            } else {
+                                clearInterval(interval); // 清除定时器
+                            }
+                        }, 50); // 每50毫秒增加1%
+                    } else {
+                        alert('提交失败: ' + data.message);
+                    }
+                })
+                .catch(error => alert('请求错误: ' + error));
+        });
     }
+
+    // 处理下一张表按钮
+    document.getElementById('nextTableButton').addEventListener('click', function() {
+        const tableContainer = document.getElementById('tableContainer');
+        // 克隆当前表格
+        const newTable = tableContainer.querySelector('table').cloneNode(true);
+
+        // 创建一个包裹新表格的容器，用来设置上下间距
+        const newTableContainer = document.createElement('div');
+        newTableContainer.style.marginTop = '20px'; // 上间距
+        newTableContainer.style.marginBottom = '20px'; // 下间距
+
+        // 将克隆的表格添加到新的容器中
+        newTableContainer.appendChild(newTable);
+
+        // 将新容器添加到表单中
+        tableContainer.appendChild(newTableContainer);
+    });
 
 
     // 绑定提交按钮事件
     document.getElementById('submitButton').addEventListener('click', submitData);
+
 </script>
 </body>
 </html>
