@@ -151,9 +151,9 @@
         </tbody>
     </table>
     <div id="buttonContainer">
-        <button id="addRow" class="layui-btn">添加表格</button>
+        <button id="addRow" class="layui-btn">添加一行</button>
         <button id="submitButton" class="layui-btn layui-btn-normal">提交表格</button>
-        <button id="nextTableButton" class="layui-btn layui-btn-primary">下一张表</button> <!-- 新增按钮 -->
+        <button id="nextTableButton" class="layui-btn layui-btn-primary">下一张表</button>
         <br><br>
         <div id="progressBarContainer">
             <div id="progressBar"></div>
@@ -195,19 +195,31 @@
         var selectedValue = this.value;
         console.log("选中的表名:", selectedValue); // 可以根据需要处理选中的表名
     });
+
+
     // WebSocket 连接方法
     function connect() {
         var tableSelect = document.getElementById('tableSelect');
-        var selectedTableName = tableSelect.value; // 获取选择的表名
+        var selectedTableName = tableSelect.value || 'defaultTable'; // 如果未选择表名，使用默认值
 
         // 建立 WebSocket 连接
         var ws = new WebSocket("ws://127.0.0.1:8081/websocket/allTable" + selectedTableName); // 插入表名
 
         ws.onmessage = function(event) {
-            // var progress = parseInt(event.data);
-            // document.getElementById("progressBar").value = progress;
+            var progress = parseInt(event.data);
+            updateProgressBar(progress); // 调用更新进度条的函数
+            console.log(event.data);
         };
+        // ws.onclose = function() {
+        //     console.log('WebSocket 连接已经关闭。');
+        // };
+
     }
+    // 页面加载时提前建立 WebSocket 连接
+    window.onload = function() {
+        fetchTableNames();
+        connect(); // 提前建立 WebSocket 连接
+    };
 
     // 添加行的功能
     document.getElementById('addRow').addEventListener('click', function() {
@@ -234,8 +246,9 @@
 
     // 更新进度条函数
     function updateProgressBar(progress) {
-        const progressBar = document.getElementById("progressBar");  // 假设进度条的 ID 是 progressBar
+        const progressBar = document.getElementById("progressBar");
         progressBar.style.width = progress + '%'; // 设置进度条宽度
+        document.getElementById("progressValue").textContent = progress + '%'; // 更新进度数值显示
     }
 
     // 提交表单数据到后端
@@ -282,7 +295,9 @@
                         if (!keyValueMap[index]) {
                             keyValueMap[index] = {}; // 初始化每个分组
                         }
-                        keyValueMap[index][keyField] = value; // 添加字段值
+                        if (keyField !== 'dict_id' || checkbox.checked) {
+                            keyValueMap[index][keyField] = value; // 添加字段值
+                        }
                     });
                 }
 
@@ -321,17 +336,7 @@
                     if (data.code === 200) {
                         alert('数据提交成功: ' + data.message);
                         // 提交成功后启动 WebSocket 连接
-                        connect(formData.tableName); // 启动WebSocket连接并开始监听进度
-                        // 从0到100%缓慢增加进度条
-                        let progress = 0;
-                        const interval = setInterval(() => {
-                            if (progress < 100) {
-                                progress++;
-                                updateProgressBar(progress); // 更新进度条
-                            } else {
-                                clearInterval(interval); // 清除定时器
-                            }
-                        }, 50); // 每50毫秒增加1%
+                        connect(formData); // 启动WebSocket连接并开始监听进度
                     } else {
                         alert('提交失败: ' + data.message);
                     }
