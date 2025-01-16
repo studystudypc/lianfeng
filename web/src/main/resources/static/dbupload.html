@@ -90,60 +90,60 @@
                     <option value="表5">表5</option>
                 </select>
             </td>
-            <td>dict_id</td>
-            <td><input type="text" class="layui-input" placeholder="请输入主键字段值，用逗号分隔"></td>
-            <td>
-                <select class="layui-input">
-                    <option value="">请选择</option>
-                    <option value="dict_id">dict_id</option>
-                    <option value="key_words">key_words</option>
-                    <option value="vendor">vendor</option>
-                    <option value="account">account</option>
-                </select>
-            </td>
-            <td><input type="checkbox" checked>
-        </tr>
-        <tr>
             <td></td>
-            <td>key_words</td>
             <td><input type="text" class="layui-input" placeholder="请输入主键字段值，用逗号分隔"></td>
             <td>
                 <select class="layui-input">
                     <option value="">请选择</option>
-                    <option value="dict_id">dict_id</option>
-                    <option value="key_words">key_words</option>
-                    <option value="vendor">vendor</option>
-                    <option value="account">account</option>
+                    <option value="dict_id">字段1</option>
+                    <option value="key_words">字段2</option>
+                    <option value="vendor">字段3</option>
+                    <option value="account">字段4</option>
                 </select>
             </td>
             <td><input type="checkbox">
         </tr>
         <tr>
             <td></td>
-            <td>vendor</td>
+            <td></td>
             <td><input type="text" class="layui-input" placeholder="请输入主键字段值，用逗号分隔"></td>
             <td>
                 <select class="layui-input">
                     <option value="">请选择</option>
-                    <option value="dict_id">dict_id</option>
-                    <option value="key_words">key_words</option>
-                    <option value="vendor">vendor</option>
-                    <option value="account">account</option>
+                    <option value="dict_id">字段1</option>
+                    <option value="key_words">字段2</option>
+                    <option value="vendor">字段3</option>
+                    <option value="account">字段4</option>
                 </select>
             </td>
             <td><input type="checkbox">
         </tr>
         <tr>
             <td></td>
-            <td>account</td>
+            <td></td>
             <td><input type="text" class="layui-input" placeholder="请输入主键字段值，用逗号分隔"></td>
             <td>
                 <select class="layui-input">
                     <option value="">请选择</option>
-                    <option value="dict_id">dict_id</option>
-                    <option value="key_words">key_words</option>
-                    <option value="vendor">vendor</option>
-                    <option value="account">account</option>
+                    <option value="dict_id">字段1</option>
+                    <option value="key_words">字段2</option>
+                    <option value="vendor">字段3</option>
+                    <option value="account">字段4</option>
+                </select>
+            </td>
+            <td><input type="checkbox">
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td><input type="text" class="layui-input" placeholder="请输入主键字段值，用逗号分隔"></td>
+            <td>
+                <select class="layui-input">
+                    <option value="">请选择</option>
+                    <option value="dict_id">字段1</option>
+                    <option value="key_words">字段2</option>
+                    <option value="vendor">字段3</option>
+                    <option value="account">字段4</option>
                 </select>
             </td>
             <td><input type="checkbox">
@@ -151,7 +151,7 @@
         </tbody>
     </table>
     <div id="buttonContainer">
-        <button id="addRow" class="layui-btn">添加一行</button>
+        <!-- <button id="addRow" class="layui-btn">添加一行</button> -->
         <button id="submitButton" class="layui-btn layui-btn-normal">提交表格</button>
         <button id="nextTableButton" class="layui-btn layui-btn-primary">下一张表</button>
         <br><br>
@@ -159,7 +159,7 @@
             <div id="progressBar"></div>
             <span id="progressValue">0%</span>
         </div>
-</div>
+    </div>
 </div>
 
 <script>
@@ -185,16 +185,136 @@
             })
             .catch(error => console.error('请求错误:', error));
     }
+    // 根据表名获取字段并填充到主键字段列
+    function fetchFieldsByTableName(tableName) {
+        const formData = new URLSearchParams(); // 创建表单数据对象
+        formData.append("tableName", tableName); // 添加表名
+        // 在未选择表名时，清空字段列的下拉框
+        if (!tableName) {
+            const rows = document.querySelectorAll('#tableBody tr');
+            rows.forEach((row, index) => {
+                if (index > 0) { // 从第二行开始
+                    const select = row.querySelector('td:nth-child(4) select'); // 获取字段列的下拉框
+                    if (select) {
+                        select.innerHTML = '<option value="">请选择</option>'; // 设置为空
+                    }
+                }
+            });
+            return; // 退出函数
+        }
 
+        fetch(`DBTransmit/reField`, { // 后端接口路径
+            method: 'POST', // 接口是POST请求
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded' // 设置请求头为表单数据
+            },
+            body: formData.toString() // 将表单数据转换为字符串
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('返回的数据:', data); // 调试输出数据结构
+                if (data.code === 200) { // 注意这里是code为0表示成功
+                    const fields = data.data.fieldName; // 字段在fieldName数组里
+                    const tableBody = document.getElementById('tableBody');
+
+                    // 检查tableBody是否存在
+                    if (!tableBody) {
+                        console.error('未找到id为tableBody的元素');
+                        return;
+                    }
+
+                    // 动态生成表格行
+                    if (fields && fields.length > 0) {
+                        const tableBody = document.getElementById('tableBody');
+
+                        // 清空现有行，但保留表名列
+                        const rows = tableBody.querySelectorAll('tr');
+                        rows.forEach((row, index) => {
+                            if (index > 0) { // 从第二行开始清空
+                                tableBody.removeChild(row);
+                            }
+                        });
+
+                        fields.forEach(field => {
+                            const newRow = document.createElement('tr');
+
+                            const td1 = document.createElement('td');
+                            const td2 = document.createElement('td');
+                            td2.innerText = field; // 填充字段名
+
+                            const td3 = document.createElement('td');
+                            const input = document.createElement('input');
+                            input.type = 'text';
+                            input.className = 'layui-input';
+                            input.placeholder = '请输入主键字段值，用逗号分隔';
+                            input.dataset.fieldType = 'primaryKey'; // 添加自定义数据属性以标识主键字段
+                            td3.appendChild(input);
+
+                            const td4 = document.createElement('td');
+                            const select = document.createElement('select');
+                            select.className = 'layui-input';
+                            // 添加默认选项
+                            const defaultOption = document.createElement('option');
+                            defaultOption.value = ''; // 默认值为空
+                            defaultOption.innerText = '请选择'; // 默认文本
+                            select.appendChild(defaultOption);
+
+                            // 替换为接口返回的字段值
+                            fields.forEach(field => {
+                                const opt = document.createElement('option');
+                                opt.value = field; // 使用接口返回的字段值
+                                opt.innerText = field; // 显示字段名
+                                select.appendChild(opt);
+                            });
+
+                            td4.appendChild(select);
+
+                            const td5 = document.createElement('td');
+                            const checkbox = document.createElement('input');
+                            checkbox.type = 'checkbox';
+                            td5.appendChild(checkbox);
+
+                            newRow.appendChild(td1);
+                            newRow.appendChild(td2);
+                            newRow.appendChild(td3);
+                            newRow.appendChild(td4);
+                            newRow.appendChild(td5);
+
+                            tableBody.appendChild(newRow);
+                        });
+                    } else {
+                        console.error('字段数据为空');
+                    }
+                } else {
+                    console.error('获取字段失败:', data.message);
+                }
+            })
+            .catch(error => console.error('请求错误:', error));
+    }
+
+    // 监听下拉框的变化
+    document.getElementById('tableSelect').addEventListener('change', function() {
+        var selectedValue = this.value;
+        if (selectedValue) {
+            // 保存当前选中的表名
+            const selectedTable = selectedValue;
+
+            // 获取字段
+            fetchFieldsByTableName(selectedTable);
+
+            // 确保表名下拉框的选中值不会丢失
+            setTimeout(() => {
+                document.getElementById('tableSelect').value = selectedTable;
+            }, 0); // 在下一个事件循环中恢复选中值
+        }
+    });
     // 页面加载时获取表名
     window.onload = function() {
         fetchTableNames();
     };
-    // 监听下拉框的变化
-    document.getElementById('tableSelect').addEventListener('change', function() {
-        var selectedValue = this.value;
-        console.log("选中的表名:", selectedValue); // 可以根据需要处理选中的表名
-    });
+    // 保存当前表名下拉框的选中值
+    const selectedTable = document.querySelector('#tableSelect').value;
+
 
 
     // WebSocket 连接方法
@@ -221,28 +341,6 @@
         connect(); // 提前建立 WebSocket 连接
     };
 
-    // 添加行的功能
-    document.getElementById('addRow').addEventListener('click', function() {
-        var tableBody = document.getElementById('tableBody');
-        var newRow = document.createElement('tr');
-        newRow.innerHTML = `
-            <td></td>
-            <td><input type="text" class="layui-input" placeholder="请输入主键字段"></td>
-            <td><input type="text" class="layui-input" placeholder="请输入主键字段值"></td>
-            <td>
-                <select class="layui-input">
-                    <option value="">请选择</option>
-                    <option value="dict_id">dict_id</option>
-                    <option value="key_words">key_words</option>
-                    <option value="vendor">vendor</option>
-                    <option value="account">account</option>
-                </select>
-            </td>
-            <td><input type="checkbox">
-            </td>
-        `;
-        tableBody.appendChild(newRow);
-    });
 
     // 更新进度条函数
     function updateProgressBar(progress) {
@@ -260,12 +358,10 @@
         }
         const tables = document.querySelectorAll('#tableContainer > table');
 
-        tables.forEach((table,index) => {
-
+        tables.forEach((table) => {
             const rows = document.querySelectorAll('#tableBody tr');
             const formData = {
                 tableName: tableSelect.value,
-                tableIndex:index + 1,
                 fieldName: [],
                 keyName: [],
                 keyValue: []
@@ -295,9 +391,7 @@
                         if (!keyValueMap[index]) {
                             keyValueMap[index] = {}; // 初始化每个分组
                         }
-                        if (keyField !== 'dict_id' || checkbox.checked) {
-                            keyValueMap[index][keyField] = value; // 添加字段值
-                        }
+                        keyValueMap[index][keyField] = value; // 添加字段值
                     });
                 }
 
@@ -312,10 +406,10 @@
             // 将分组的字段值转换为数组格式
             formData.keyValue = Object.values(keyValueMap);
 
-            // 如果主键字段为空，自动添加默认字段 dict_id
-            if (!formData.keyName.includes('dict_id')) {
-                formData.keyName.push('dict_id');
-            }
+            // // 如果主键字段为空，自动添加默认字段 dict_id
+            // if (!formData.keyName.includes('dict_id')) {
+            //     formData.keyName.push('dict_id');
+            // }
 
             // 如果 fieldName 数组为空，则不添加该字段到 formData
             if (formData.fieldName.length === 0) {
@@ -345,23 +439,97 @@
         });
     }
 
-    // 处理下一张表按钮
+    // // 处理下一张表按钮
+    // document.getElementById('nextTableButton').addEventListener('click', function() {
+    //     const tableContainer = document.getElementById('tableContainer');
+    //
+    //     // 创建一个新的表格
+    //     const newTable = document.createElement('table');
+    //     newTable.className = 'layui-table';
+    //
+    //     // 添加表头
+    //     newTable.innerHTML = `
+    //     <thead>
+    //         <tr>
+    //             <th>表名</th>
+    //             <th>主键字段</th>
+    //             <th>主键字段值</th>
+    //             <th>字段</th>
+    //             <th>勾选主键</th>
+    //         </tr>
+    //     </thead>
+    //     <tbody id="tableBody">
+    //         <tr>
+    //             <td>
+    //                 <select class="layui-input" id="tableSelect">
+    //                     <option value="">请选择</option>
+    //                     <!-- 通过后端接口填充表名数据 -->
+    //                 </select>
+    //             </td>
+    //             <td></td>
+    //             <td><input type="text" class="layui-input" placeholder="请输入主键字段值，用逗号分隔"></td>
+    //             <td>
+    //                 <select class="layui-input">
+    //                     <option value="">请选择</option>
+    //                     <option value="dict_id">dict_id</option>
+    //                     <option value="key_words">key_words</option>
+    //                     <option value="vendor">vendor</option>
+    //                     <option value="account">account</option>
+    //                 </select>
+    //             </td>
+    //             <td><input type="checkbox" checked></td>
+    //         </tr>
+    //     </tbody>
+    // `;
+    //
+    //     // 在创建新表格后填充表名数据
+    //     fetchTableNames(); // 调用获取表名的函数
+    //
+    //     // 获取表名数据并填充下拉框
+    //     function fetchTableNames() {
+    //         fetch('DB/tableName') // 接口路径
+    //             .then(response => response.json())
+    //             .then(data => {
+    //                 if (data.code === 200) {
+    //                     const tableSelect = newTable.querySelector('#tableSelect'); // 获取新表格中的下拉框
+    //                     // 清空现有选项
+    //                     tableSelect.innerHTML = '<option value="">请选择</option>';
+    //                     // 遍历 data 中的 tableName 并添加到下拉框
+    //                     data.data.forEach(item => {
+    //                         const option = document.createElement('option');
+    //                         option.value = item.tableName;
+    //                         option.textContent = item.tableName;
+    //                         tableSelect.appendChild(option);
+    //                     });
+    //                 } else {
+    //                     console.error('获取表名失败:', data.message);
+    //                 }
+    //             })
+    //             .catch(error => console.error('请求错误:', error));
+    //     }
+    //
+    //     // 创建一个包裹新表格的容器，用来设置上下间距
+    //     const newTableContainer = document.createElement('div');
+    //     newTableContainer.style.marginTop = '20px'; // 上间距
+    //     newTableContainer.style.marginBottom = '20px'; // 下间距
+    //
+    //     // 将新表格添加到新的容器中
+    //     newTableContainer.appendChild(newTable);
+    //
+    //     // 将新容器添加到表单中
+    //     tableContainer.appendChild(newTableContainer);
+    // });
+
     document.getElementById('nextTableButton').addEventListener('click', function() {
-        const tableContainer = document.getElementById('tableContainer');
-        // 克隆当前表格
-        const newTable = tableContainer.querySelector('table').cloneNode(true);
+        // 提交当前表单数据
+        submitData(); // 调用提交数据的函数
 
-        // 创建一个包裹新表格的容器，用来设置上下间距
-        const newTableContainer = document.createElement('div');
-        newTableContainer.style.marginTop = '20px'; // 上间距
-        newTableContainer.style.marginBottom = '20px'; // 下间距
-
-        // 将克隆的表格添加到新的容器中
-        newTableContainer.appendChild(newTable);
-
-        // 将新容器添加到表单中
-        tableContainer.appendChild(newTableContainer);
+        // 提交成功后刷新页面
+        setTimeout(() => {
+            location.reload(); // 刷新页面
+        }, 2000); // 等待1秒以确保提交完成
     });
+
 
 
     // 绑定提交按钮事件
