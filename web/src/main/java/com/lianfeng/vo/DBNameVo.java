@@ -14,4 +14,5 @@ import lombok.Data;
 public class DBNameVo {
 
     String tableName;
+
 }

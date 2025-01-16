@@ -35,4 +35,5 @@ public class DBTransmitVo {
      * 其它字段
      */
     String[] fieldName;
+
 }

@@ -13,10 +13,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -106,7 +103,7 @@ public class DBTransmitContoller {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     @PostMapping("reField")
-    public R<DBTransmitPo> reField(String name) throws SQLException {
+    public R<DBTransmitPo> reField(@RequestParam("tableName") String name) throws SQLException {
 
         DBTransmitPo dbTransmitPo = idbTransmitService.reField(name);
         return R.data(dbTransmitPo);
