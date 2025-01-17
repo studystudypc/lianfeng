@@ -3,10 +3,8 @@ package com.lianfeng.controller;
 import com.lianfeng.common.response.R;
 import com.lianfeng.common.utils.JsonUtiles;
 import com.lianfeng.model.entity.DbSaveoreditinfoTable;
-import com.lianfeng.po.DBTransmitPo;
 import com.lianfeng.po.DbSaveOrNamePo;
-import com.lianfeng.service.DbSaveoreditinfoTableService;
-import com.lianfeng.service.IDBTransmitService;
+import com.lianfeng.service.IDbSaveoreditinfoTableService;
 import com.lianfeng.service.IDbConnectionInfoService;
 import com.lianfeng.vo.DBNameVo;
 import com.lianfeng.vo.DBTransmitVo;
@@ -17,7 +15,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import springfox.documentation.spring.web.json.Json;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -31,7 +28,7 @@ import java.util.Map;
 public class DbSaveoreditinfoTableController{
 
     @Autowired
-    private DbSaveoreditinfoTableService dbSaveoreditinfoTableService;
+    private IDbSaveoreditinfoTableService dbSaveoreditinfoTableService;
     @Autowired
     private IDbConnectionInfoService iDbConnectionInfoService;
 
@@ -89,6 +86,8 @@ public class DbSaveoreditinfoTableController{
 
         return R.data(result);
     }
+
+
 
 }
 

@@ -1,12 +1,14 @@
 package com.lianfeng.controller;
 
-import cn.hutool.core.util.ArrayUtil;
 import com.alibaba.excel.util.StringUtils;
 import com.baomidou.mybatisplus.core.toolkit.ArrayUtils;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.lianfeng.common.exception.LFBusinessException;
 import com.lianfeng.common.response.R;
+import com.lianfeng.common.utils.JsonUtiles;
+import com.lianfeng.model.entity.DbSaveoreditinfoTable;
 import com.lianfeng.po.DBTransmitPo;
+import com.lianfeng.service.IDbSaveoreditinfoTableService;
 import com.lianfeng.service.IDBTransmitService;
 import com.lianfeng.vo.DBTransmitVo;
 import io.swagger.annotations.Api;
@@ -38,6 +40,9 @@ public class DBTransmitContoller {
     @Autowired
     private IDBTransmitService idbTransmitService;
 
+    @Autowired
+    private IDbSaveoreditinfoTableService iDbSaveoreditinfoTableService;
+
     @ApiOperation(
             value = "数据库传输接口",
             notes = "指定某个数据或某个字段上传数据库",
@@ -45,7 +50,7 @@ public class DBTransmitContoller {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     @PostMapping("listTransmit")
-    public R<DBTransmitPo> dbTransmitPo(@RequestBody DBTransmitVo dbTransmitVo) throws SQLException {
+    public R<DBTransmitPo> listTransmit(@RequestBody DBTransmitVo dbTransmitVo) throws SQLException {
         DBTransmitPo dbTransmitPo = null;
         if (StringUtils.isBlank(dbTransmitVo.getTableName())){
             throw new LFBusinessException(TABLE_NAME_CANNOT_BE_NULL.getCode(),TABLE_NAME_CANNOT_BE_NULL.getDesc());
@@ -109,5 +114,21 @@ public class DBTransmitContoller {
         return R.data(dbTransmitPo);
     }
 
+    @ApiOperation(
+            value = "传输模块",
+            notes = "点击按钮进行传输",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @PostMapping("oneTransmit")
+    public R<DBTransmitPo> oneTransmit(@RequestBody List<String> idDbSaveoreditinfoTable) throws SQLException {
+        List<DbSaveoreditinfoTable> list = iDbSaveoreditinfoTableService.listByIds(idDbSaveoreditinfoTable);
+        for (DbSaveoreditinfoTable dbSaveoreditinfoTable : list) {
+            String tablejson = dbSaveoreditinfoTable.getTablejson();
+            DBTransmitVo dbTransmitVo = JsonUtiles.jsonToObject(tablejson, DBTransmitVo.class);
+            listTransmit(dbTransmitVo);
+        }
+        return R.success("传输成功");
+    }
 
 }

@@ -3,10 +3,7 @@ package com.lianfeng.service.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lianfeng.mapper.DbSaveoreditinfoTableMapper;
 import com.lianfeng.model.entity.DbSaveoreditinfoTable;
-import com.lianfeng.service.DbSaveoreditinfoTableService;
-import com.lianfeng.vo.DbSaveoreditinfoTableVo;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.lianfeng.service.IDbSaveoreditinfoTableService;
 import org.springframework.stereotype.Service;
 
 /**
@@ -16,7 +13,7 @@ import org.springframework.stereotype.Service;
 */
 @Service
 public class DbSaveoreditinfoTableServiceImpl extends ServiceImpl<DbSaveoreditinfoTableMapper, DbSaveoreditinfoTable>
-    implements DbSaveoreditinfoTableService {
+    implements IDbSaveoreditinfoTableService {
 
 }
 

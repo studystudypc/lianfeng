@@ -284,7 +284,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
             Object value = redisService.getValue(PROGRESS_BAR_ALL + tableName);
             Integer allCount = Integer.valueOf(String.valueOf(value));
             int i = (int) ((count * 100.0) / allCount);
-            webSocket.sendOneMessage(KEY_FIELD_TABLE + tableName,String.valueOf(i));
+            webSocket.sendOneMessage(ALL_TABLE + tableName,String.valueOf(i));
         }
         connection.close();
         preparedStatement.close();
@@ -403,7 +403,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
             Object value = redisService.getValue(PROGRESS_BAR_ALL + tableName);
             Integer allCount = Integer.valueOf(String.valueOf(value));
             int i = (int) ((count * 100.0) / allCount); // 计算百分比
-            webSocket.sendOneMessage(KEY_TABLE + tableName, String.valueOf(i));
+            webSocket.sendOneMessage(ALL_TABLE + tableName, String.valueOf(i));
 
         }
         connection.close();
@@ -531,8 +531,8 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
             count++;
             Object value = redisService.getValue(PROGRESS_BAR_ALL + tableName);
             Integer allCount = Integer.valueOf(String.valueOf(value));
-            int i = (int) ((allCount * 100.0) / allCount);
-            webSocket.sendOneMessage(FIELD_TABLE+tableName,String.valueOf(i));
+            int i = (int) ((count * 100.00) / allCount);
+            webSocket.sendOneMessage(ALL_TABLE+tableName,String.valueOf(i));
 
         }
         connection.close();
