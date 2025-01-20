@@ -108,9 +108,9 @@ public class DBTransmitContoller {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     @PostMapping("reField")
-    public R<DBTransmitPo> reField(@RequestParam("tableName") String name) throws SQLException {
+    public R<DBTransmitPo> reField(@RequestParam("tableName") String tableName) throws SQLException {
 
-        DBTransmitPo dbTransmitPo = idbTransmitService.reField(name);
+        DBTransmitPo dbTransmitPo = idbTransmitService.reField(tableName);
         return R.data(dbTransmitPo);
     }
 

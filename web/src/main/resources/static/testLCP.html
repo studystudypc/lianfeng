@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Styled Table</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ccc;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #e0e0e0;
+        }
+
+        .table-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .action-buttons {
+            text-align: center;
+        }
+
+        .action-buttons button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+
+        .action-buttons button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<script src="./js/vue.js"></script>
+<div class="table-container">
+    <table>
+        <thead>
+        <tr>
+            <th>序号</th>
+            <th>表名</th>
+            <th>传输设置</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+<!-- 模态框示例 -->
+<div class="modal fade edit-box" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">配置参数</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="configForm">
+                    <div class="mb-3">
+                        <label for="tableName" class="form-label">表名</label>
+                        <input type="text" class="form-control" id="tableName" value="Dict" disabled>
+                    </div>
+                    <div class="mb-3" id="zhujian">
+                        <label>主键</label>
+                    </div>
+                    <div class="mb-3" id="keyFields">
+                    </div>
+
+
+                    <div class="mb-3">
+                        <label>更新的字段</label>
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>K</th>
+                                <th>V</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td><input type="text" class="form-control" name="kValue1" placeholder="Enter K"></td>
+                                <td><input type="text" class="form-control" name="vValue1" placeholder="Enter V"></td>
+                            </tr>
+                            <tr>
+                                <td><input type="text" class="form-control" name="kValue2" placeholder="Enter K"></td>
+                                <td><input type="text" class="form-control" name="vValue2" placeholder="Enter V"></td>
+                            </tr>
+                            <tr>
+                                <td><input type="text" class="form-control" name="kValue3" placeholder="Enter K"></td>
+                                <td><input type="text" class="form-control" name="vValue3" placeholder="Enter V"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <button type="button" class="btn btn-primary" onclick="submitForm()">保存</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/bootstrap.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    axios({
+        url: "/TransmitSaveOrEdit/list"
+    }).then(res => {
+        const tableBody = document.querySelector('tbody');
+
+        for (let i = 0; i < res.data.data.length; i++) {
+            let item = res.data.data[i];
+            let tableName = item.tableName;
+            let tablejson = item.tablejson;
+            let id = item.id;
+            let isupdate = item.isupdate;
+            tableBody.innerHTML += `
+        <tr>
+            <td>${i + 1}</td>
+            <td>${tableName}</td>
+            <td>
+                 <button type="button" class="btn btn-primary btn-edit-name" data-bs-toggle="modal" data-bs-target=".edit-box" onclick="editTable('${tableName}')">
+                    配置参数
+                </button>
+            </td>
+            <td>
+                <button>数据传输</button>
+                <div class="progress-container">
+                    <progress value="${isupdate || 0}" max="100"></progress>
+                </div>
+            </td>
+        </tr>
+        `;
+        }
+    })
+
+    function submitForm() {
+        const keyName = Array.from(document.querySelectorAll('input[name="keyName"]:checked')).map(el => el.value);
+        const keyValue = Array.from(document.querySelectorAll('input[name="keyValue"]:checked')).map(el => el.value);
+        const fieldName = Array.from(document.querySelectorAll('input[name="fieldName"]:checked')).map(el => el.value);
+        const tableName = document.getElementById('tableName').value;
+
+        const data = {
+            keyName: keyName,
+            keyValue: keyValue.map((v, i) => ({ [keyName[i]]: v })),
+            fieldName: fieldName,
+            tableName: tableName
+        };
+
+        console.log(data);
+
+        // 发送数据到后端
+        axios.post('/submit-config', data)
+            .then(response => {
+                console.log(response.data);
+                alert('配置已保存');
+            })
+            .catch(error => {
+                console.error(error);
+                alert('保存失败');
+            });
+    }
+
+    function editTable(tableName){
+        axios({
+            method: 'post',
+            url: "/DBTransmit/reField",
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            data: {
+                tableName: tableName
+            }
+        }).then(res => {
+            console.log('Success:', res.data.data);
+            console.log('Success:', res.data);
+            const fieldNames = res.data.data.fieldName;
+            document.getElementById('tableName').value = tableName;
+            populateKeyFields(fieldNames);
+        })
+    }
+
+    function populateKeyFields(fieldNames) {
+        const keyFieldsContainer = document.getElementById('keyFields');
+        keyFieldsContainer.innerHTML = ''; // 清空容器内容
+
+        fieldNames.forEach((fieldName, index) => {
+            const div = document.createElement('div');
+            div.className = 'form-check';
+            div.innerHTML = `
+                <input class="form-check-input" type="checkbox" name="keyName" value="${fieldName}" id="keyName${index}">
+                <label class="form-check-label" for="keyName${index}">
+                    ${fieldName}
+                </label>
+            `;
+            keyFieldsContainer.appendChild(div);
+        });
+    }
+</script>
+
+</body>
+</html>

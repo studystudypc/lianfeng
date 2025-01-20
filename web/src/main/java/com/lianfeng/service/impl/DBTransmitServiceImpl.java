@@ -5,18 +5,25 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lianfeng.common.constants.LFanConstants;
 import com.lianfeng.common.exception.LFBusinessException;
 import com.lianfeng.common.utils.JdbcUtil;
+import com.lianfeng.common.utils.JsonUtiles;
 import com.lianfeng.controller.WebSocket;
 import com.lianfeng.mapper.DBTransmitMapper;
+import com.lianfeng.mapper.DataTransferLogMapper;
+import com.lianfeng.model.entity.DataTransferLog;
 import com.lianfeng.model.entity.DbConnectionInfo;
 import com.lianfeng.po.DBTransmitPo;
 import com.lianfeng.service.IDBTransmitService;
+import com.lianfeng.service.IDataTransferLogService;
 import com.lianfeng.service.IDbConnectionInfoService;
 import com.lianfeng.service.RedisService;
+import com.lianfeng.vo.DBTransmitVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.templateparser.markup.decoupled.IDecoupledTemplateLogicResolver;
 
 import java.sql.*;
 import java.util.*;
+import java.util.Date;
 
 import static com.lianfeng.common.response.ResponseCode.DATABASE_CONNECTION_INSUFFICIENT;
 import static com.lianfeng.common.response.ResponseCode.PRIMARY_KEY_NOT_FOUND;
@@ -30,7 +37,7 @@ import static com.lianfeng.constans.WebSocketConstant.*;
  * @Date 2024-12-26 10:39
  */
 @Service
-public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> implements IDBTransmitService {
+public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper, Object> implements IDBTransmitService {
 
     @Autowired
     private IDbConnectionInfoService iDbConnectionInfoService;
@@ -41,16 +48,19 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
     @Autowired
     private WebSocket webSocket;
 
+    @Autowired
+    private IDataTransferLogService iDataTransferLogService;
+
 
     /**
+     * @param keyName
+     * @return DBTransmitPo
      * @Author liuchuanping
      * @Description 全表传输
      * 1.连接数据库（源数据库和目标数据库）
      * 2.传输数据
      * @Date 2024-12-26 11:08
      * @Param tableName
-     * @param keyName
-     * @return DBTransmitPo
      **/
     @Override
     public DBTransmitPo dBTransmit(String tableName, String[] keyName) throws SQLException {
@@ -60,7 +70,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
         queryWrapper.eq(DbConnectionInfo::getIsDeleted, LFanConstants.ZERO_INT); // 0未删除
         List<DbConnectionInfo> list = iDbConnectionInfoService.list(queryWrapper);//数据源信息
         if (list.size() < 2) {
-            throw new LFBusinessException(DATABASE_CONNECTION_INSUFFICIENT.getCode(),DATABASE_CONNECTION_INSUFFICIENT.getDesc());
+            throw new LFBusinessException(DATABASE_CONNECTION_INSUFFICIENT.getCode(), DATABASE_CONNECTION_INSUFFICIENT.getDesc());
         }
         StringBuilder sqlSelect = new StringBuilder("SELECT ");//查询多主键的sql
         for (int i = 0; i < keyName.length; i++) {
@@ -82,11 +92,13 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
                 tableName);//查询源数据，拼接更新sql语句。
         //UPDATE account SET trial_blance_id = '0', assistant_use1 = NULL, customer_use = '0', assistant_use2 = '0', account_id = '11', assistant_use = '1', account_name = '1', account_class = NULL, disabled = '0', calculate = '1', drake = NULL, demo1 = NULL WHERE account_des = NULL AND is_asset = '0' AND account_code = '11'
 
+
         targetTransmit(targetInfo.getDbUsername(),
                 targetInfo.getDbPassword(),
                 targetInfo.getDbUrl(),
                 updateSql,
-                tableName);
+                tableName,
+                keyName);
 
 
         return dbTransmitPo;
@@ -94,6 +106,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
 
     /**
      * 需要更新的字段
+     *
      * @param tableName
      * @param keyName
      * @param fieldName
@@ -108,7 +121,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
         queryWrapper.eq(DbConnectionInfo::getIsDeleted, LFanConstants.ZERO_INT); // 0未删除
         List<DbConnectionInfo> list = iDbConnectionInfoService.list(queryWrapper);//数据源信息
         if (list.size() < 2) {
-            throw new LFBusinessException(DATABASE_CONNECTION_INSUFFICIENT.getCode(),DATABASE_CONNECTION_INSUFFICIENT.getDesc());
+            throw new LFBusinessException(DATABASE_CONNECTION_INSUFFICIENT.getCode(), DATABASE_CONNECTION_INSUFFICIENT.getDesc());
         }
         DbConnectionInfo sourceInfo = list.get(0); // 第一个数据源
         DbConnectionInfo targetInfo = list.get(1); // 第二个数据源
@@ -121,6 +134,8 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
                 tableName,
                 fieldName);//查询源数据，拼接更新sql语句。
         //INSERT INTO dict(dict_id, state_id, industry_id) VALUES(99, '666', '999') ON DUPLICATE KEY UPDATE state_id='888'
+
+
         fieldNamdBTransmit(targetInfo.getDbUsername(),
                 targetInfo.getDbPassword(),
                 targetInfo.getDbUrl(),
@@ -132,6 +147,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
 
     /**
      * 需要更新的主键
+     *
      * @param tableName
      * @param keyName
      * @param keyValue
@@ -145,7 +161,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
         queryWrapper.eq(DbConnectionInfo::getIsDeleted, LFanConstants.ZERO_INT); // 0未删除
         List<DbConnectionInfo> list = iDbConnectionInfoService.list(queryWrapper);//数据源信息
         if (list.size() < 2) {
-            throw new LFBusinessException(DATABASE_CONNECTION_INSUFFICIENT.getCode(),DATABASE_CONNECTION_INSUFFICIENT.getDesc());
+            throw new LFBusinessException(DATABASE_CONNECTION_INSUFFICIENT.getCode(), DATABASE_CONNECTION_INSUFFICIENT.getDesc());
         }
         DbConnectionInfo sourceInfo = list.get(0); // 第一个数据源
         DbConnectionInfo targetInfo = list.get(1); // 第二个数据源
@@ -162,7 +178,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
 //        state_id = '8888',
 //                company_id = '9999';
 
-        redisService.setValue(PROGRESS_BAR_ALL + tableName,String.valueOf(updateSql.size()));
+        redisService.setValue(PROGRESS_BAR_ALL + tableName, String.valueOf(updateSql.size()));
         keyValueBTransmit(targetInfo.getDbUsername(),
                 targetInfo.getDbPassword(),
                 targetInfo.getDbUrl(),
@@ -174,6 +190,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
 
     /**
      * 全字段更新
+     *
      * @param tableName
      * @param keyName
      * @param keyValue
@@ -189,14 +206,14 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
         queryWrapper.eq(DbConnectionInfo::getIsDeleted, LFanConstants.ZERO_INT); // 0未删除
         List<DbConnectionInfo> list = iDbConnectionInfoService.list(queryWrapper);//数据源信息
         if (list.size() < 2) {
-            throw new LFBusinessException(DATABASE_CONNECTION_INSUFFICIENT.getCode(),DATABASE_CONNECTION_INSUFFICIENT.getDesc());
+            throw new LFBusinessException(DATABASE_CONNECTION_INSUFFICIENT.getCode(), DATABASE_CONNECTION_INSUFFICIENT.getDesc());
         }
         DbConnectionInfo sourceInfo = list.get(0); // 第一个数据源
         DbConnectionInfo targetInfo = list.get(1); // 第二个数据源
 
         StringBuilder sqlSelect = new StringBuilder("SELECT ");//查询多主键的sql
         for (int i = 0; i < fieldName.length; i++) {
-            if (i > 0){
+            if (i > 0) {
                 sqlSelect.append(",");
             }
             sqlSelect.append(fieldName[i]);
@@ -204,7 +221,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
         sqlSelect.append(" FROM " + tableName);
         sqlSelect.append(" WHERE ");
         for (int i = 0; i < keyValue.length; i++) {
-            if (i > 0){
+            if (i > 0) {
                 sqlSelect.append(" AND ");
             }
             sqlSelect.append(keyName[i]).append(" = '").append(keyValue[i].replace("'", "''")).append("'");
@@ -218,7 +235,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
                 fieldName,
                 tableName,
                 sqlSelect.toString());//查询源数据，拼接更新sql语句。
-        redisService.setValue(PROGRESS_BAR_ALL + tableName,String.valueOf(updateSql.size()));
+        redisService.setValue(PROGRESS_BAR_ALL + tableName, String.valueOf(updateSql.size()));
 
         allBTransmit(targetInfo.getDbUsername(),
                 targetInfo.getDbPassword(),
@@ -231,6 +248,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
 
     /**
      * 返回某个表的字段名字
+     *
      * @param name
      * @return
      */
@@ -238,12 +256,12 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
     public DBTransmitPo reField(String name) throws SQLException {
         DBTransmitPo dbTransmitPo = new DBTransmitPo();
 
-        String sql  = "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE table_name = '" + name + "'";
+        String sql = "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE table_name = '" + name + "'";
         LambdaQueryWrapper<DbConnectionInfo> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(DbConnectionInfo::getIsDeleted, LFanConstants.ZERO_INT); // 0未删除
         List<DbConnectionInfo> list = iDbConnectionInfoService.list(queryWrapper);//数据源信息
         if (list.size() < 2) {
-            throw new LFBusinessException(DATABASE_CONNECTION_INSUFFICIENT.getCode(),DATABASE_CONNECTION_INSUFFICIENT.getDesc());
+            throw new LFBusinessException(DATABASE_CONNECTION_INSUFFICIENT.getCode(), DATABASE_CONNECTION_INSUFFICIENT.getDesc());
         }
         DbConnectionInfo sourceInfo = list.get(0); // 第一个数据源
 
@@ -257,7 +275,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
         }
         dbTransmitPo.setFieldName(result);
 
-        JdbcUtil.release(connection,preparedStatement,resultSet);
+        JdbcUtil.release(connection, preparedStatement, resultSet);
         return dbTransmitPo;
     }
 
@@ -265,13 +283,14 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
 
     /**
      * 全字段更新sql执行
+     *
      * @param dbUsername
      * @param dbPassword
      * @param dbUrl
      * @param updateSql
      * @throws SQLException
      */
-    private void allBTransmit(String dbUsername, String dbPassword, String dbUrl, List<String> updateSql,String tableName) throws SQLException {
+    private void allBTransmit(String dbUsername, String dbPassword, String dbUrl, List<String> updateSql, String tableName) throws SQLException {
         Connection connection = JdbcUtil.getConnection(dbUrl, dbUsername, dbPassword); // 连接信息
         PreparedStatement preparedStatement = null;
         int count = 0;
@@ -284,7 +303,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
             Object value = redisService.getValue(PROGRESS_BAR_ALL + tableName);
             Integer allCount = Integer.valueOf(String.valueOf(value));
             int i = (int) ((count * 100.0) / allCount);
-            webSocket.sendOneMessage(ALL_TABLE + tableName,String.valueOf(i));
+            webSocket.sendOneMessage(ALL_TABLE + tableName, String.valueOf(i));
         }
         connection.close();
         preparedStatement.close();
@@ -293,6 +312,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
 
     /**
      * 全字段更新sql
+     *
      * @param dbUsername
      * @param dbPassword
      * @param dbUrl
@@ -304,7 +324,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
      * @return
      * @throws SQLException
      */
-    private List<String> updateConnection(String dbUsername, String dbPassword, String dbUrl, String[] keyName, String[] keyValue, String[] fieldName, String tableName,String sqlSelect) throws SQLException {
+    private List<String> updateConnection(String dbUsername, String dbPassword, String dbUrl, String[] keyName, String[] keyValue, String[] fieldName, String tableName, String sqlSelect) throws SQLException {
 
         Connection connection = JdbcUtil.getConnection(dbUrl, dbUsername, dbPassword); // 连接信息
         PreparedStatement preparedStatement = connection.prepareStatement(sqlSelect);
@@ -323,8 +343,8 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
             rows.add(row);
         }
 
-        if (rows.size() == 0){
-            throw new LFBusinessException(PRIMARY_KEY_NOT_FOUND.getCode(),DATABASE_CONNECTION_INSUFFICIENT.getDesc());
+        if (rows.size() == 0) {
+            throw new LFBusinessException(PRIMARY_KEY_NOT_FOUND.getCode(), DATABASE_CONNECTION_INSUFFICIENT.getDesc());
         }
 
         List<String> listSql = new ArrayList<>();
@@ -340,26 +360,26 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
                 values.add(value);
             }
             for (int i = 0; i < keyName.length; i++) {
-                if (i > 0 ){
+                if (i > 0) {
                     sql.append(",");
                 }
                 sql.append(keyName[i]);
             }
             for (int i = 0; i < fieldName.length; i++) {
-                if (i >= 0){
+                if (i >= 0) {
                     sql.append(",");
                 }
                 sql.append(fieldName[i]);
             }
             sql.append(") VALUES ( ");
             for (int i = 0; i < keyValue.length; i++) {
-                if (i > 0){
+                if (i > 0) {
                     sql.append(" , ");
                 }
                 sql.append("'").append(keyValue[i]).append("'");
             }
             for (int i = 0; i < columns.size(); i++) {
-                if (i >= 0){
+                if (i >= 0) {
                     sql.append(" , ");
                 }
                 sql.append("'").append(values.get(i)).append("'");
@@ -367,7 +387,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
             sql.append(") ON DUPLICATE KEY UPDATE ");
 
             for (int i = 0; i < columns.size(); i++) {
-                if (i > 0){
+                if (i > 0) {
                     sql.append(", ");
                 }
                 sql.append(columns.get(i)).append(" = '").append(values.get(i)).append("'");
@@ -377,20 +397,21 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
             listSql.add(sql.toString());
         }
 
-        JdbcUtil.release(connection,preparedStatement,resultSet);
+        JdbcUtil.release(connection, preparedStatement, resultSet);
 
         return listSql;
     }
 
     /**
      * 需要更新的主键sql执行
+     *
      * @param dbUsername
      * @param dbPassword
      * @param dbUrl
      * @param updateSql
      * @throws SQLException
      */
-    private void keyValueBTransmit(String dbUsername, String dbPassword, String dbUrl, List<String> updateSql,String tableName) throws SQLException {
+    private void keyValueBTransmit(String dbUsername, String dbPassword, String dbUrl, List<String> updateSql, String tableName) throws SQLException {
         Connection connection = JdbcUtil.getConnection(dbUrl, dbUsername, dbPassword); // 连接信息
         PreparedStatement preparedStatement = null;
         int count = 0;
@@ -413,6 +434,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
 
     /**
      * 需要更新的主键sql拼接
+     *
      * @param dbUsername
      * @param dbPassword
      * @param dbUrl
@@ -507,22 +529,24 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
             listSql.add(finalSql);
         }
 
-        JdbcUtil.release(connection,preparedStatement,resultSet);
+        JdbcUtil.release(connection, preparedStatement, resultSet);
 
         return listSql;
     }
 
     /**
      * 需要更新的字段的sql执行
+     *
      * @param dbUsername
      * @param dbPassword
      * @param dbUrl
      * @param updateSql
      */
-    private void fieldNamdBTransmit(String dbUsername, String dbPassword, String dbUrl, List<String> updateSql,String tableName) throws SQLException {
+    private void fieldNamdBTransmit(String dbUsername, String dbPassword, String dbUrl, List<String> updateSql, String tableName) throws SQLException {
         Connection connection = JdbcUtil.getConnection(dbUrl, dbUsername, dbPassword); // 连接信息
         PreparedStatement preparedStatement = null;
         int count = 0;
+
 
         for (String sql : updateSql) {
             preparedStatement = connection.prepareStatement(sql);
@@ -532,7 +556,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
             Object value = redisService.getValue(PROGRESS_BAR_ALL + tableName);
             Integer allCount = Integer.valueOf(String.valueOf(value));
             int i = (int) ((count * 100.00) / allCount);
-            webSocket.sendOneMessage(ALL_TABLE+tableName,String.valueOf(i));
+            webSocket.sendOneMessage(ALL_TABLE + tableName, String.valueOf(i));
 
         }
         connection.close();
@@ -542,6 +566,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
 
     /**
      * 需要更新字段的sql
+     *
      * @param dbUsername
      * @param dbPassword
      * @param dbUrl
@@ -631,19 +656,20 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
             listSql.add(sql.toString());
         }
         JdbcUtil.release(connection, preparedStatement, resultSet);
-        redisService.setValue(PROGRESS_BAR_ALL + tableName,String.valueOf(listSql.size()));//总条数，显示进度条用的
+        redisService.setValue(PROGRESS_BAR_ALL + tableName, String.valueOf(listSql.size()));//总条数，显示进度条用的
         return listSql;
     }
 
     /**
      * 全表传输的sql执行
+     *
      * @param dbUsername
      * @param dbPassword
      * @param dbUrl
      * @param updateSql
      * @throws SQLException
      */
-    private void targetTransmit(String dbUsername, String dbPassword, String dbUrl, List<String> updateSql,String tableName) throws SQLException {
+    private void targetTransmit(String dbUsername, String dbPassword, String dbUrl, List<String> updateSql, String tableName, String[] keyName) throws SQLException {
         Connection connection = JdbcUtil.getConnection(dbUrl, dbUsername, dbPassword); // 连接信息
         PreparedStatement preparedStatement = null;
         int count = 0;
@@ -651,13 +677,14 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
         for (String sql : updateSql) {
             preparedStatement = connection.prepareStatement(sql);
             preparedStatement.execute();
+
+
             count++;
 //            ResultSetMetaData metaData = resultSet.getMetaData();
             Object value = redisService.getValue(PROGRESS_BAR_ALL + tableName);
             Integer allCount = Integer.valueOf((String) value);
             int i = (int) ((count * 100.0) / allCount); // 计算百分比
             webSocket.sendOneMessage(ALL_TABLE + tableName, String.valueOf(i));
-
         }
         connection.close();
         preparedStatement.close();
@@ -666,6 +693,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
 
     /**
      * 全表传输的sql
+     *
      * @param dbUsername
      * @param dbPassword
      * @param dbUrl
@@ -689,7 +717,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
         }
         countResultSet.close();
         countStatement.close();
-        redisService.setValue(PROGRESS_BAR_ALL + tableName ,String.valueOf(rowCount));
+        redisService.setValue(PROGRESS_BAR_ALL + tableName, String.valueOf(rowCount));
 
         PreparedStatement preparedStatement = connection.prepareStatement(selectSql);
         ResultSet resultSet = preparedStatement.executeQuery();
@@ -726,7 +754,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper,Object> 
             listSql.add(replaceSql.toString());
         }
 
-        JdbcUtil.release(connection,preparedStatement,resultSet); // 关闭连接
+        JdbcUtil.release(connection, preparedStatement, resultSet); // 关闭连接
 
         return listSql;
     }
