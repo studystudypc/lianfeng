@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lianfeng.common.constants.LFanConstants;
 import com.lianfeng.common.exception.LFBusinessException;
+import com.lianfeng.common.response.R;
 import com.lianfeng.common.utils.JdbcUtil;
 import com.lianfeng.common.utils.JsonUtiles;
 import com.lianfeng.controller.WebSocket;
@@ -12,6 +13,7 @@ import com.lianfeng.mapper.DataTransferLogMapper;
 import com.lianfeng.model.entity.DataTransferLog;
 import com.lianfeng.model.entity.DbConnectionInfo;
 import com.lianfeng.po.DBTransmitPo;
+import com.lianfeng.po.DataTransferLogPo;
 import com.lianfeng.service.IDBTransmitService;
 import com.lianfeng.service.IDataTransferLogService;
 import com.lianfeng.service.IDbConnectionInfoService;
@@ -24,6 +26,8 @@ import org.thymeleaf.templateparser.markup.decoupled.IDecoupledTemplateLogicReso
 import java.sql.*;
 import java.util.*;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.lianfeng.common.response.ResponseCode.DATABASE_CONNECTION_INSUFFICIENT;
 import static com.lianfeng.common.response.ResponseCode.PRIMARY_KEY_NOT_FOUND;
@@ -90,7 +94,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper, Object>
                 sourceInfo.getDbUrl(),
                 keyName,
                 tableName);//查询源数据，拼接更新sql语句。
-        //UPDATE account SET trial_blance_id = '0', assistant_use1 = NULL, customer_use = '0', assistant_use2 = '0', account_id = '11', assistant_use = '1', account_name = '1', account_class = NULL, disabled = '0', calculate = '1', drake = NULL, demo1 = NULL WHERE account_des = NULL AND is_asset = '0' AND account_code = '11'
+//        REPLACE INTO dict (is_auto_match, dict_id, industry_id, is_from_public, customer_used, description, key_is_word, company_id_create, dict_order, vendor, disabled, state_id, is_approve, dict_type, time_create, company_id, user_id_update, user_id_approve, user_id_create, key_words, dict_status, is_public, account_code, beizhu, account, ask_manager) VALUES ('0', '6', '1', '0', '0', NULL, '0', '0', '0', 'Amazon', '0', '1', '0', '0', NULL, '0', '0', '0', '0', 'AMZN', '0', '0', NULL, NULL, 'Purchases', '0')
 
 
         targetTransmit(targetInfo.getDbUsername(),
@@ -133,14 +137,14 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper, Object>
                 keyName,
                 tableName,
                 fieldName);//查询源数据，拼接更新sql语句。
-        //INSERT INTO dict(dict_id, state_id, industry_id) VALUES(99, '666', '999') ON DUPLICATE KEY UPDATE state_id='888'
-
+//        INSERT INTO dict(dict_id, state_id, company_id, vendor) VALUES ('2', '1', '0', '88 Marketplace') ON DUPLICATE KEY UPDATE company_id='0', vendor='88 Marketplace'
 
         fieldNamdBTransmit(targetInfo.getDbUsername(),
                 targetInfo.getDbPassword(),
                 targetInfo.getDbUrl(),
                 updateSql,
-                tableName);
+                tableName,
+                keyName);
 
         return dbTransmitPo;
     }
@@ -183,7 +187,9 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper, Object>
                 targetInfo.getDbPassword(),
                 targetInfo.getDbUrl(),
                 updateSql,
-                tableName);
+                tableName,
+                keyValue,
+                keyName);
 
         return dbTransmitPo;
     }
@@ -236,12 +242,13 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper, Object>
                 tableName,
                 sqlSelect.toString());//查询源数据，拼接更新sql语句。
         redisService.setValue(PROGRESS_BAR_ALL + tableName, String.valueOf(updateSql.size()));
-
+//INSERT INTO dict(dict_id,state_id,dict_order) VALUES ( '10' , '1' , '0') ON DUPLICATE KEY UPDATE dict_order = '0'
         allBTransmit(targetInfo.getDbUsername(),
                 targetInfo.getDbPassword(),
                 targetInfo.getDbUrl(),
                 updateSql,
-                tableName);
+                tableName,
+                keyName);
 
         return dbTransmitPo;
     }
@@ -290,14 +297,29 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper, Object>
      * @param updateSql
      * @throws SQLException
      */
-    private void allBTransmit(String dbUsername, String dbPassword, String dbUrl, List<String> updateSql, String tableName) throws SQLException {
+    private void allBTransmit(String dbUsername, String dbPassword, String dbUrl, List<String> updateSql, String tableName,String[] keyName) throws SQLException {
         Connection connection = JdbcUtil.getConnection(dbUrl, dbUsername, dbPassword); // 连接信息
         PreparedStatement preparedStatement = null;
         int count = 0;
 
         for (String sql : updateSql) {
             preparedStatement = connection.prepareStatement(sql);
-            preparedStatement.execute();
+            DataTransferLog dataTransferLog = new DataTransferLog();
+            dataTransferLog.setTransferStatus(0);
+            dataTransferLog.setStartTime(new Date());
+            dataTransferLog.setTableName(tableName);
+            boolean execute = preparedStatement.execute();
+            String field = JsonUtiles.objectToJson(allBTransmitToJson(sql, keyName));
+
+            if (!execute){
+                dataTransferLog.setField(field);
+                dataTransferLog.setTransferStatus(1);
+            }else {
+                dataTransferLog.setTransferStatus(0);
+                dataTransferLog.setErrorMessage(field);
+            }
+            iDataTransferLogService.save(dataTransferLog);
+
 //            ResultSetMetaData metaData = resultSet.getMetaData();
             count++;
             Object value = redisService.getValue(PROGRESS_BAR_ALL + tableName);
@@ -308,6 +330,40 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper, Object>
         connection.close();
         preparedStatement.close();
         redisService.deleteValue(PROGRESS_BAR_ALL);
+    }
+
+    private String allBTransmitToJson(String sql, String[] keyName) {
+
+        String columnsRegex = "\\(([^\\)]+)\\)";
+        Pattern pattern = Pattern.compile(columnsRegex);
+        Matcher matcher = pattern.matcher(sql);
+        String columns = "";
+        String values = "";
+        if (matcher.find()) {
+            columns = matcher.group(1);
+        }
+
+        sql.lastIndexOf("VALUES");
+        sql.lastIndexOf(")");
+        String substring = sql.substring(sql.lastIndexOf("VALUES") + 8, sql.lastIndexOf(")"));
+
+        values = substring;
+
+        String[] splitColumns = columns.split(",");
+        String[] splitValues = values.split(",");
+
+        Map<String, String> columnValueMap = new HashMap<>();
+
+        for (int i = 0; i < splitColumns.length; i++) {
+            columnValueMap.put(splitColumns[i], splitValues[i]);
+        }
+        StringBuilder result = new StringBuilder();
+        for (String key : keyName) {
+            String value = columnValueMap.get(key);
+            result.append(key+":"+value).append(",");
+
+        }
+        return result.delete(result.lastIndexOf(","),result.length()).toString();
     }
 
     /**
@@ -411,14 +467,29 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper, Object>
      * @param updateSql
      * @throws SQLException
      */
-    private void keyValueBTransmit(String dbUsername, String dbPassword, String dbUrl, List<String> updateSql, String tableName) throws SQLException {
+    private void keyValueBTransmit(String dbUsername, String dbPassword, String dbUrl, List<String> updateSql, String tableName,String[] keyName, String[] keyValue) throws SQLException {
         Connection connection = JdbcUtil.getConnection(dbUrl, dbUsername, dbPassword); // 连接信息
         PreparedStatement preparedStatement = null;
         int count = 0;
 
         for (String sql : updateSql) {
             preparedStatement = connection.prepareStatement(sql);
-            preparedStatement.execute();
+            DataTransferLog dataTransferLog = new DataTransferLog();
+            dataTransferLog.setTransferStatus(0);
+            dataTransferLog.setStartTime(new Date());
+            dataTransferLog.setTableName(tableName);
+            boolean execute = preparedStatement.execute();
+
+            String field = JsonUtiles.objectToJson(fieldToJon(sql, keyName,keyValue));
+            if (!execute){
+                dataTransferLog.setField(field);
+                dataTransferLog.setTransferStatus(1);
+            }else {
+                dataTransferLog.setTransferStatus(0);
+                dataTransferLog.setErrorMessage(field);
+            }
+            iDataTransferLogService.save(dataTransferLog);
+
 //            ResultSetMetaData metaData = resultSet.getMetaData();
             count++;
             Object value = redisService.getValue(PROGRESS_BAR_ALL + tableName);
@@ -542,7 +613,7 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper, Object>
      * @param dbUrl
      * @param updateSql
      */
-    private void fieldNamdBTransmit(String dbUsername, String dbPassword, String dbUrl, List<String> updateSql, String tableName) throws SQLException {
+    private void fieldNamdBTransmit(String dbUsername, String dbPassword, String dbUrl, List<String> updateSql, String tableName,String[] keyName) throws SQLException {
         Connection connection = JdbcUtil.getConnection(dbUrl, dbUsername, dbPassword); // 连接信息
         PreparedStatement preparedStatement = null;
         int count = 0;
@@ -550,7 +621,24 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper, Object>
 
         for (String sql : updateSql) {
             preparedStatement = connection.prepareStatement(sql);
-            preparedStatement.execute();
+            DataTransferLog dataTransferLog = new DataTransferLog();
+            dataTransferLog.setTransferStatus(0);
+            dataTransferLog.setStartTime(new Date());
+            dataTransferLog.setTableName(tableName);
+            boolean execute = preparedStatement.execute();
+
+            String field = JsonUtiles.objectToJson(fieldToJson(sql, keyName));
+
+            if (!execute){
+                dataTransferLog.setField(field);
+                dataTransferLog.setTransferStatus(1);
+            }else {
+                dataTransferLog.setTransferStatus(0);
+                dataTransferLog.setErrorMessage(field);
+            }
+            iDataTransferLogService.save(dataTransferLog);
+
+
 //            ResultSetMetaData metaData = resultSet.getMetaData();
             count++;
             Object value = redisService.getValue(PROGRESS_BAR_ALL + tableName);
@@ -562,6 +650,42 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper, Object>
         connection.close();
         preparedStatement.close();
         redisService.deleteValue(PROGRESS_BAR_ALL + tableName);
+    }
+
+    private String fieldToJson(String sql, String[] keyName) {
+//        INSERT INTO dict(dict_id, state_id, company_id, vendor) VALUES ('2', '1', '0', '88 Marketplace') ON DUPLICATE KEY UPDATE company_id='0', vendor='88 Marketplace'
+        String columnsRegex = "\\(([^\\)]+)\\)";
+        Pattern pattern = Pattern.compile(columnsRegex);
+        Matcher matcher = pattern.matcher(sql);
+
+        String columns = "";
+        String values = "";
+
+        if (matcher.find()) {
+            columns = matcher.group(1);
+        }
+        int index = sql.lastIndexOf(")");
+        String substring = sql.substring(sql.lastIndexOf("VALUES") + 8, index);
+        values = substring;
+
+        String[] columnsArray = columns.split(", ");
+        String[] valuesArray = values.split(", ");
+
+        Map<String, String> columnValueMap = new HashMap<>();
+        try {
+            for (int i = 0; i < columnsArray.length; i++) {
+                columnValueMap.put(columnsArray[i],valuesArray[i]);
+            }
+        }catch (RuntimeException e){
+            e.printStackTrace();
+
+        }
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < keyName.length; i++) {
+            String s = columnValueMap.get(keyName[i]);
+            result.append(keyName[i]+":"+s).append(",");
+        }
+        return result.delete(result.lastIndexOf(","),result.length()).toString();
     }
 
     /**
@@ -676,8 +800,22 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper, Object>
 
         for (String sql : updateSql) {
             preparedStatement = connection.prepareStatement(sql);
-            preparedStatement.execute();
+            DataTransferLog dataTransferLog = new DataTransferLog();
+            dataTransferLog.setTransferStatus(0);
+            dataTransferLog.setStartTime(new Date());
+            dataTransferLog.setTableName(tableName);
+            boolean execute = preparedStatement.execute();
 
+            String field = JsonUtiles.objectToJson(fieldToJon(sql, keyName));
+
+            if (!execute){
+                dataTransferLog.setField(field);
+                dataTransferLog.setTransferStatus(1);
+            }else {
+                dataTransferLog.setTransferStatus(0);
+                dataTransferLog.setErrorMessage(field);
+            }
+            iDataTransferLogService.save(dataTransferLog);
 
             count++;
 //            ResultSetMetaData metaData = resultSet.getMetaData();
@@ -690,6 +828,8 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper, Object>
         preparedStatement.close();
         redisService.deleteValue(PROGRESS_BAR_ALL + tableName);
     }
+
+
 
     /**
      * 全表传输的sql
@@ -757,5 +897,52 @@ public class DBTransmitServiceImpl extends ServiceImpl<DBTransmitMapper, Object>
         JdbcUtil.release(connection, preparedStatement, resultSet); // 关闭连接
 
         return listSql;
+    }
+
+    private String fieldToJon(String sql,String[] keyName) {
+        String columnsRegex = "\\(([^\\)]+)\\)";
+        Pattern pattern = Pattern.compile(columnsRegex);
+        Matcher matcher = pattern.matcher(sql);
+
+        String columns = "";
+        String values = "";
+
+        if (matcher.find()) {
+            columns = matcher.group(1);
+        }
+        values = sql.substring(sql.lastIndexOf("VALUES") + 8, sql.length() - 1);
+
+        String[] columnsArray = columns.split(", ");
+        String[] valuesArray = values.split(", ");
+
+        Map<String, String> columnValueMap = new HashMap<>();
+        try {
+            for (int i = 0; i < columnsArray.length; i++) {
+                columnValueMap.put(columnsArray[i],valuesArray[i]);
+            }
+        }catch (RuntimeException e){
+            e.printStackTrace();
+
+        }
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < keyName.length; i++) {
+            String s = columnValueMap.get(keyName[i]);
+            result.append(keyName[i]+":"+s).append(",");
+        }
+        return result.delete(result.lastIndexOf(","),result.length()).toString();
+    }
+
+    private String fieldToJon(String sql,String[] keyName,String[] keyValue) {
+        Map<String, String> columnValueMap = new HashMap<>();
+        for (int i = 0; i < keyName.length; i++) {
+            columnValueMap.put(keyValue[i],keyName[i]);
+        }
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < keyValue.length; i++) {
+            String s = columnValueMap.get(keyValue[i]);
+            result.append(keyValue[i]+":"+s).append(",");
+        }
+        return result.delete(result.lastIndexOf(","),result.length()).toString();
+
     }
 }
