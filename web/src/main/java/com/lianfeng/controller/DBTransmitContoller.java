@@ -143,8 +143,10 @@ public class DBTransmitContoller {
         List<DBTransmitPo> dbTransmitPos = new ArrayList<>();
         for (DBTransmitVo dbTransmitVo : list) {
             R<DBTransmitPo> dbTransmitPoR = listTransmit(dbTransmitVo);
+            dbTransmitPos.add(dbTransmitPoR.getData());
         }
-        return R.data(dbTransmitPos);
+        return R.success();
+
     }
 
 }
