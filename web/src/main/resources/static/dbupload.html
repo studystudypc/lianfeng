@@ -48,8 +48,6 @@
 
         /* 按钮容器样式，始终固定在页面底部 */
         #buttonContainer {
-            position: fixed;
-            bottom: 20px;
             width: 100%;
             text-align: center;
             background-color: white;
@@ -61,6 +59,33 @@
         #tableContainer .layui-btn {
             margin-bottom: 20px;
         }
+
+        /* 弹窗样式 */
+        #modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .layui-layer-content {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            width: 70%;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+
+        .layui-btn {
+            margin: 10px;
+        }
+
     </style>
 </head>
 <body>
@@ -71,469 +96,546 @@
     <table class="layui-table">
         <thead>
         <tr>
+            <th>序号</th>
             <th>表名</th>
-            <th>主键字段</th>
-            <th>主键字段值</th>
-            <th>字段</th>
-            <th>勾选主键</th>
+            <th>传输设置</th>
+            <th>操作</th>
         </tr>
         </thead>
         <tbody id="tableBody">
-        <tr>
-            <td>
-                <select class="layui-input" id="tableSelect">
-                    <option value="">请选择</option>
-                    <option value="表1">表1</option>
-                    <option value="表2">表2</option>
-                    <option value="表3">表3</option>
-                    <option value="表4">表4</option>
-                    <option value="表5">表5</option>
-                </select>
-            </td>
-            <td></td>
-            <td><input type="text" class="layui-input" placeholder="请输入主键字段值，用逗号分隔"></td>
-            <td>
-                <select class="layui-input">
-                    <option value="">请选择</option>
-                    <option value="dict_id">字段1</option>
-                    <option value="key_words">字段2</option>
-                    <option value="vendor">字段3</option>
-                    <option value="account">字段4</option>
-                </select>
-            </td>
-            <td><input type="checkbox">
-        </tr>
-        <tr>
-            <td></td>
-            <td></td>
-            <td><input type="text" class="layui-input" placeholder="请输入主键字段值，用逗号分隔"></td>
-            <td>
-                <select class="layui-input">
-                    <option value="">请选择</option>
-                    <option value="dict_id">字段1</option>
-                    <option value="key_words">字段2</option>
-                    <option value="vendor">字段3</option>
-                    <option value="account">字段4</option>
-                </select>
-            </td>
-            <td><input type="checkbox">
-        </tr>
-        <tr>
-            <td></td>
-            <td></td>
-            <td><input type="text" class="layui-input" placeholder="请输入主键字段值，用逗号分隔"></td>
-            <td>
-                <select class="layui-input">
-                    <option value="">请选择</option>
-                    <option value="dict_id">字段1</option>
-                    <option value="key_words">字段2</option>
-                    <option value="vendor">字段3</option>
-                    <option value="account">字段4</option>
-                </select>
-            </td>
-            <td><input type="checkbox">
-        </tr>
-        <tr>
-            <td></td>
-            <td></td>
-            <td><input type="text" class="layui-input" placeholder="请输入主键字段值，用逗号分隔"></td>
-            <td>
-                <select class="layui-input">
-                    <option value="">请选择</option>
-                    <option value="dict_id">字段1</option>
-                    <option value="key_words">字段2</option>
-                    <option value="vendor">字段3</option>
-                    <option value="account">字段4</option>
-                </select>
-            </td>
-            <td><input type="checkbox">
-        </tr>
+
         </tbody>
     </table>
     <div id="buttonContainer">
-        <!-- <button id="addRow" class="layui-btn">添加一行</button> -->
-        <button id="submitButton" class="layui-btn layui-btn-normal">提交表格</button>
-        <button id="nextTableButton" class="layui-btn layui-btn-primary">下一张表</button>
-        <br><br>
-        <div id="progressBarContainer">
-            <div id="progressBar"></div>
-            <span id="progressValue">0%</span>
-        </div>
+        <button id="submitButton" class="layui-btn layui-btn-normal">批量数据传输</button>
     </div>
 </div>
 
-<script>
-    // 获取表名数据并填充下拉框
-    function fetchTableNames() {
-        fetch('DB/tableName') // 接口路径
-            .then(response => response.json())
-            .then(data => {
-                if (data.code === 200) {
-                    const tableSelect = document.getElementById('tableSelect');
-                    // 清空现有选项
-                    tableSelect.innerHTML = '<option value="">请选择</option>';
-                    // 遍历 data 中的 tableName 并添加到下拉框
-                    data.data.forEach(item => {
-                        const option = document.createElement('option');
-                        option.value = item.tableName;
-                        option.textContent = item.tableName;
-                        tableSelect.appendChild(option);
-                    });
-                } else {
-                    console.error('获取表名失败:', data.message);
-                }
-            })
-            .catch(error => console.error('请求错误:', error));
-    }
-    // 根据表名获取字段并填充到主键字段列
-    function fetchFieldsByTableName(tableName) {
-        const formData = new URLSearchParams(); // 创建表单数据对象
-        formData.append("tableName", tableName); // 添加表名
-        // 在未选择表名时，清空字段列的下拉框
-        if (!tableName) {
-            const rows = document.querySelectorAll('#tableBody tr');
-            rows.forEach((row, index) => {
-                if (index > 0) { // 从第二行开始
-                    const select = row.querySelector('td:nth-child(4) select'); // 获取字段列的下拉框
-                    if (select) {
-                        select.innerHTML = '<option value="">请选择</option>'; // 设置为空
-                    }
-                }
-            });
-            return; // 退出函数
-        }
+<!-- 弹窗 -->
+<div id="modal" class="layui-layer layui-layer-page" style="display: none;">
+    <div class="layui-layer-content">
+        <h3>设置主键/字段</h3>
+        <table class="layui-table">
+            <thead>
+            <tr>
+                <th>主键字段</th>
+                <th>主键字段值</th>
+                <th>字段</th>
+            </tr>
+            </thead>
+            <tbody id="modalTableBody">
+            <!-- 动态生成的表格内容 -->
+            </tbody>
+        </table>
+        <button id="closeModalButton" class="layui-btn layui-btn-normal">关闭</button>
+        <button id="saveModalButton" class="layui-btn layui-btn-normal">保存</button>
+    </div>
+</div>
 
-        fetch(`DBTransmit/reField`, { // 后端接口路径
-            method: 'POST', // 接口是POST请求
+
+<script>
+
+    let keyName = [];
+    let keyValue = [];
+    let fieldName = [];
+    // 打开弹窗
+    function openModal(tableName) {
+        // 清空全局变量
+        keyName = [];
+        keyValue = [];
+        fieldName = [];
+
+        const modal = document.getElementById('modal');
+        const modalBody = document.getElementById('modalTableBody');
+
+        // 清空弹窗中的表格内容
+        modalBody.innerHTML = '';
+
+        // 显示表名
+        const modalTitle = document.createElement('h4');
+        modalTitle.textContent = `表名: ${tableName}`;
+        modalBody.appendChild(modalTitle);
+
+        // 请求获取字段数据 (POST请求)
+        const formData = new URLSearchParams();
+        formData.append('tableName', tableName);
+
+        fetch('DBTransmit/reField', {
+            method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded' // 设置请求头为表单数据
+                'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: formData.toString() // 将表单数据转换为字符串
+            body: formData.toString()
         })
             .then(response => response.json())
             .then(data => {
-                console.log('返回的数据:', data); // 调试输出数据结构
-                if (data.code === 200) { // 注意这里是code为0表示成功
-                    const fields = data.data.fieldName; // 字段在fieldName数组里
-                    const tableBody = document.getElementById('tableBody');
+                if (data && data.code === 200 && data.data && Array.isArray(data.data.fieldName)) {
+                    // 动态生成表格内容
+                    data.data.fieldName.forEach((field, index) => {
+                        const row = document.createElement('tr');
 
-                    // 检查tableBody是否存在
-                    if (!tableBody) {
-                        console.error('未找到id为tableBody的元素');
-                        return;
-                    }
-
-                    // 动态生成表格行
-                    if (fields && fields.length > 0) {
-                        const tableBody = document.getElementById('tableBody');
-
-                        // 清空现有行，但保留表名列
-                        const rows = tableBody.querySelectorAll('tr');
-                        rows.forEach((row, index) => {
-                            if (index > 0) { // 从第二行开始清空
-                                tableBody.removeChild(row);
+                        // 创建“主键字段”列
+                        const td1 = document.createElement('td');
+                        td1.textContent = field;
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.addEventListener('change', function() {
+                            if (this.checked) {
+                                keyName.push(field);
+                            } else {
+                                keyName = keyName.filter(name => name !== field);
                             }
                         });
+                        td1.appendChild(checkbox);
+                        row.appendChild(td1);
 
-                        fields.forEach(field => {
-                            const newRow = document.createElement('tr');
-
-                            const td1 = document.createElement('td');
-                            const td2 = document.createElement('td');
-                            td2.innerText = field; // 填充字段名
-
-                            const td3 = document.createElement('td');
-                            const input = document.createElement('input');
-                            input.type = 'text';
-                            input.className = 'layui-input';
-                            input.placeholder = '请输入主键字段值，用逗号分隔';
-                            input.dataset.fieldType = 'primaryKey'; // 添加自定义数据属性以标识主键字段
-                            td3.appendChild(input);
-
-                            const td4 = document.createElement('td');
-                            const select = document.createElement('select');
-                            select.className = 'layui-input';
-                            // 添加默认选项
-                            const defaultOption = document.createElement('option');
-                            defaultOption.value = ''; // 默认值为空
-                            defaultOption.innerText = '请选择'; // 默认文本
-                            select.appendChild(defaultOption);
-
-                            // 替换为接口返回的字段值
-                            fields.forEach(field => {
-                                const opt = document.createElement('option');
-                                opt.value = field; // 使用接口返回的字段值
-                                opt.innerText = field; // 显示字段名
-                                select.appendChild(opt);
-                            });
-
-                            td4.appendChild(select);
-
-                            const td5 = document.createElement('td');
-                            const checkbox = document.createElement('input');
-                            checkbox.type = 'checkbox';
-                            td5.appendChild(checkbox);
-
-                            newRow.appendChild(td1);
-                            newRow.appendChild(td2);
-                            newRow.appendChild(td3);
-                            newRow.appendChild(td4);
-                            newRow.appendChild(td5);
-
-                            tableBody.appendChild(newRow);
+                        // 创建“主键字段值”列（输入框）
+                        const td2 = document.createElement('td');
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.className = 'layui-input';
+                        input.addEventListener('input', function() {
+                            const value = this.value;
+                            const index = keyValue.findIndex(item => item.field === field);
+                            if (index !== -1) {
+                                keyValue[index].value = value;
+                            } else {
+                                keyValue.push({ field, value });
+                            }
                         });
-                    } else {
-                        console.error('字段数据为空');
-                    }
+                        td2.appendChild(input);
+                        row.appendChild(td2);
+
+                        // 创建“字段”列（下拉框）
+                        const td3 = document.createElement('td');
+                        td3.textContent = field;
+                        const checkbox1 = document.createElement('input');
+                        checkbox1.type = 'checkbox';
+                        checkbox1.addEventListener('change', function() {
+                            if (this.checked) {
+                                fieldName.push(field);
+                            } else {
+                                fieldName = fieldName.filter(name => name !== field);
+                            }
+                        });
+                        td3.appendChild(checkbox1);
+                        row.appendChild(td3);
+
+                        // 将行添加到表格
+                        modalBody.appendChild(row);
+                    });
+
+                    // 获取保存的信息并填充到表格
+                    //TODO fetchSavedData(tableName);
                 } else {
-                    console.error('获取字段失败:', data.message);
+                    console.error('字段数据格式错误，未找到有效字段');
                 }
             })
-            .catch(error => console.error('请求错误:', error));
+            .catch(error => {
+                console.error('获取字段数据失败:', error);
+            });
+
+        // 显示弹窗
+        modal.style.display = 'flex';
     }
 
-    // 监听下拉框的变化
-    document.getElementById('tableSelect').addEventListener('change', function() {
-        var selectedValue = this.value;
-        if (selectedValue) {
-            // 保存当前选中的表名
-            const selectedTable = selectedValue;
 
-            // 获取字段
-            fetchFieldsByTableName(selectedTable);
 
-            // 确保表名下拉框的选中值不会丢失
-            setTimeout(() => {
-                document.getElementById('tableSelect').value = selectedTable;
-            }, 0); // 在下一个事件循环中恢复选中值
-        }
+
+    // 关闭弹窗
+    document.getElementById('closeModalButton').addEventListener('click', function() {
+        const modal = document.getElementById('modal');
+        modal.style.display = 'none';
     });
-    // 页面加载时获取表名
-    window.onload = function() {
-        fetchTableNames();
-    };
-    // 保存当前表名下拉框的选中值
-    const selectedTable = document.querySelector('#tableSelect').value;
 
 
+    // 保存按钮（可根据需求进行进一步实现）
+    document.getElementById('saveModalButton').addEventListener('click', function() {
 
-    // WebSocket 连接方法
-    function connect() {
-        var tableSelect = document.getElementById('tableSelect');
-        var selectedTableName = tableSelect.value || 'defaultTable'; // 如果未选择表名，使用默认值
+    });
 
-        // 建立 WebSocket 连接
-        var ws = new WebSocket("ws://127.0.0.1:8081/websocket/allTable" + selectedTableName); // 插入表名
+    fetchTableNames();
 
-        ws.onmessage = function(event) {
-            var progress = parseInt(event.data);
-            updateProgressBar(progress); // 调用更新进度条的函数
-            console.log(event.data);
-        };
-        // ws.onclose = function() {
-        //     console.log('WebSocket 连接已经关闭。');
-        // };
+    function fetchTableNames() {
+        fetch('DB/tableName')  // 这是你的接口路径
+            .then(response => response.json())  // 假设返回的是JSON格式的数据
+            .then(data => {
+                console.log(data);  // 打印返回的数据，查看结构
 
-    }
-    // 页面加载时提前建立 WebSocket 连接
-    window.onload = function() {
-        fetchTableNames();
-        connect(); // 提前建立 WebSocket 连接
-    };
+                // 检查 data.data 是否存在并且是数组
+                if (data && Array.isArray(data.data)) {
+                    const tableBody = document.getElementById('tableBody');
+                    data.data.forEach((item, index) => {
+                        const row = document.createElement('tr');
+
+                        // 序号列
+                        const td1 = document.createElement('td');
+                        td1.textContent = index + 1;  // 序号从1开始
+                        row.appendChild(td1);
+
+                        // 表名列
+                        const td2 = document.createElement('td');
+                        td2.textContent = item.tableName;  // 填充表名
+                        row.appendChild(td2);
+
+                        // 传输设置列
+                        const td3 = document.createElement('td');
+                        const button3 = document.createElement('button');
+                        button3.textContent = '设置主键/字段';
+                        td3.appendChild(button3);
+                        row.appendChild(td3);
+
+                        // 操作列
+                        const td4 = document.createElement('td');
+                        const button4 = document.createElement('button');
+                        button4.textContent = '数据传输';
+                        td4.appendChild(button4);
+                        row.appendChild(td4);
+
+                        // 为 "设置主键/字段" 按钮添加点击事件
+                        button3.addEventListener('click', function() {
+                            openModal(item.tableName); // 传递表名以便在弹窗中显示
+                        });
+
+                        // 为 "数据传输" 按钮添加点击事件
+                        button4.addEventListener('click', function() {
+                            transmitData(item.tableName);  // 传递表名给数据传输接口
+                        });
 
 
-    // 更新进度条函数
-    function updateProgressBar(progress) {
-        const progressBar = document.getElementById("progressBar");
-        progressBar.style.width = progress + '%'; // 设置进度条宽度
-        document.getElementById("progressValue").textContent = progress + '%'; // 更新进度数值显示
-    }
-
-    // 提交表单数据到后端
-    function submitData() {
-        const tableSelect = document.getElementById('tableSelect');
-        if (!tableSelect || !tableSelect.value) {
-            alert("请选择表名！");
-            return;
-        }
-        const tables = document.querySelectorAll('#tableContainer > table');
-
-        tables.forEach((table) => {
-            const rows = document.querySelectorAll('#tableBody tr');
-            const formData = {
-                tableName: tableSelect.value,
-                fieldName: [],
-                keyName: [],
-                keyValue: []
-            };
-            const keyValueMap = {}; // 用于存储分组的主键字段值
-
-            rows.forEach(row => {
-                const checkbox = row.querySelector('td:nth-child(5) input');
-                const keyField = row.querySelector('td:nth-child(2)').textContent?.trim(); // 读取主键字段
-                const keyFieldValue = row.querySelector('td:nth-child(3) input')?.value?.trim(); // 读取主键字段值
-                const fieldNameValue = row.querySelector('td:nth-child(4) select')?.value?.trim(); // 读取字段名
-
-                if (checkbox?.checked) {
-                    if (!formData.keyName.includes(keyField)) {
-                        formData.keyName.push(keyField); // 添加主键字段
-                    }
-                }
-
-                // 检查复选框是否被选中并验证主键字段和主键字段值
-                if (checkbox?.checked && keyField && keyFieldValue) {
-                    if (!formData.keyName.includes(keyField)) {
-                        formData.keyName.push(keyField); // 添加主键字段到 keyName
-                    }
-                    // 按照逗号分隔字段值并按字段名存储
-                    const values = keyFieldValue?.split(',').map(val => val.trim()) || [];
-                    values.forEach((value, index) => {
-                        if (!keyValueMap[index]) {
-                            keyValueMap[index] = {}; // 初始化每个分组
-                        }
-                        keyValueMap[index][keyField] = value; // 添加字段值
+                        // 将生成的行添加到表格
+                        tableBody.appendChild(row);
                     });
+                } else {
+                    console.error('返回的数据格式错误，data 不存在或不是数组');
                 }
+            })
+            .catch(error => {
+                console.error('获取表名失败:', error);
+            });
+    }
 
 
-                // 检查字段名是否存在
-                if (fieldNameValue) {
-                    if (!formData.fieldName.includes(fieldNameValue)) {
-                        formData.fieldName.push(fieldNameValue);
-                    }
+    document.getElementById('saveModalButton').addEventListener('click', function() {
+        // 拼接数据
+        const dataToSend = {
+            id: 0,  // 如果需要传递特定的ID，可以修改这里
+            isUpdate: 0,  // 如果需要设置更新状态，可以修改这里
+            tablejson: JSON.stringify({
+                fieldName: fieldName,  // 所有勾选的字段名
+                keyName: keyName,      // 所有勾选的主键字段
+                keyValue: generateKeyValue(keyName, keyValue),  // 格式化后的 keyValue
+                tableName: document.querySelector('#modal h4').textContent.split(': ')[1]  // 获取表名
+            })
+        };
+
+        // 打印拼接后的数据以检查格式
+        console.log(JSON.stringify(dataToSend));
+
+        // 保存主键/字段配置信息
+        fetch('TransmitSaveOrEdit/saveOrEdit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'  // 设置请求体格式为JSON
+            },
+            body: JSON.stringify(dataToSend)  // 将拼接好的数据转化为JSON字符串
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.code === 200) {
+                    alert('保存成功');
+                    // 关闭弹窗
+                    const modal = document.getElementById('modal');
+                    modal.style.display = 'none';
+                } else {
+                    alert('保存失败');
+                }
+            })
+            .catch(error => {
+                console.error('保存失败:', error);
+                alert('保存过程中出错');
+            });
+    });
+
+    function generateKeyValue(keyName, keyValue) {
+        const result = [];
+
+        // 获取每一列的输入值，按照主键字段生成对应的多个对象
+        const valuesMap = {}; // 用于存储每个字段的多个值
+        keyValue.forEach(item => {
+            if (!valuesMap[item.field]) {
+                valuesMap[item.field] = [];
+            }
+            // 按照逗号分隔每个字段的值
+            const values = item.value.split(',').map(val => val.trim());
+            valuesMap[item.field] = values;
+        });
+
+        // 根据keyName和valuesMap生成keyValue格式
+        let numEntries = Math.max(...Object.values(valuesMap).map(arr => arr.length));
+        for (let i = 0; i < numEntries; i++) {
+            let obj = {};
+            keyName.forEach(field => {
+                if (valuesMap[field] && valuesMap[field][i]) {
+                    obj[field] = valuesMap[field][i];
                 }
             });
-            // 将分组的字段值转换为数组格式
-            formData.keyValue = Object.values(keyValueMap);
+            result.push(obj);
+        }
 
-            // // 如果主键字段为空，自动添加默认字段 dict_id
-            // if (!formData.keyName.includes('dict_id')) {
-            //     formData.keyName.push('dict_id');
-            // }
-
-            // 如果 fieldName 数组为空，则不添加该字段到 formData
-            if (formData.fieldName.length === 0) {
-                delete formData.fieldName;  // 删除 fieldName 字段
-            }
+        return result;
+    }
 
 
-            // 发送数据到后端
-            fetch('DBTransmit/listTransmit', {
-                method: 'POST',
+    //把保存信息填充到弹窗表格
+    function fetchSavedData(tableName) {
+        return new Promise((resolve, reject) => {
+            const url = new URL('TransmitSaveOrEdit/list', window.location.origin);
+
+            fetch(url, {
+                method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
+                }
             })
                 .then(response => response.json())
                 .then(data => {
-                    if (data.code === 200) {
-                        alert('数据提交成功: ' + data.message);
-                        // 提交成功后启动 WebSocket 连接
-                        connect(formData); // 启动WebSocket连接并开始监听进度
+                    if (data && data.code === 200 && Array.isArray(data.data)) {
+                        const record = data.data.find(item => item.tableName === tableName);
+
+                        if (record && record.tablejson) {
+                            try {
+                                const tablejson = JSON.parse(record.tablejson);
+                                console.log("解析后的 tablejson 数据:", tablejson);
+
+                                const modalBody = document.getElementById('modalTableBody');
+                                if (!modalBody) {
+                                    console.error("未找到表格容器 modalTableBody");
+                                    reject(new Error("未找到表格容器 modalTableBody"));
+                                    return;
+                                }
+
+                                modalBody.innerHTML = ''; // 清空表格内容
+
+                                const allFields = tablejson.fieldName.concat(tablejson.keyName);
+                                allFields.forEach(field => {
+                                    const row = document.createElement('tr');
+
+                                    const td1 = document.createElement('td');
+                                    td1.textContent = field;
+                                    const checkbox = document.createElement('input');
+                                    checkbox.type = 'checkbox';
+                                    checkbox.checked = tablejson.keyName.includes(field);
+                                    td1.appendChild(checkbox);
+                                    row.appendChild(td1);
+
+                                    const td2 = document.createElement('td');
+                                    const input = document.createElement('input');
+                                    input.type = 'text';
+                                    input.className = 'layui-input';
+                                    input.value = tablejson.keyValue.find(item => item[field])?.[field] || '';
+                                    td2.appendChild(input);
+                                    row.appendChild(td2);
+
+                                    const td3 = document.createElement('td');
+                                    const checkbox2 = document.createElement('input');
+                                    checkbox2.type = 'checkbox';
+                                    checkbox2.checked = tablejson.fieldName.includes(field);
+                                    td3.appendChild(checkbox2);
+                                    row.appendChild(td3);
+
+                                    modalBody.appendChild(row);
+                                });
+
+                                resolve(true);
+                            } catch (error) {
+                                console.error("解析 tablejson 数据失败:", error);
+                                reject(new Error("tablejson 数据格式错误"));
+                            }
+                        } else {
+                            console.error(`未找到表名为 "${tableName}" 的记录`);
+                            reject(new Error(`未找到表名为 "${tableName}" 的记录`));
+                        }
                     } else {
-                        alert('提交失败: ' + data.message);
+                        console.error("返回的数据格式错误或 data 不存在");
+                        reject(new Error("返回的数据格式错误或 data 不存在"));
                     }
                 })
-                .catch(error => alert('请求错误: ' + error));
+                .catch(error => {
+                    console.error("获取保存的数据失败:", error);
+                    reject(new Error("获取保存的数据失败"));
+                });
         });
     }
 
-    // // 处理下一张表按钮
-    // document.getElementById('nextTableButton').addEventListener('click', function() {
-    //     const tableContainer = document.getElementById('tableContainer');
-    //
-    //     // 创建一个新的表格
-    //     const newTable = document.createElement('table');
-    //     newTable.className = 'layui-table';
-    //
-    //     // 添加表头
-    //     newTable.innerHTML = `
-    //     <thead>
-    //         <tr>
-    //             <th>表名</th>
-    //             <th>主键字段</th>
-    //             <th>主键字段值</th>
-    //             <th>字段</th>
-    //             <th>勾选主键</th>
-    //         </tr>
-    //     </thead>
-    //     <tbody id="tableBody">
-    //         <tr>
-    //             <td>
-    //                 <select class="layui-input" id="tableSelect">
-    //                     <option value="">请选择</option>
-    //                     <!-- 通过后端接口填充表名数据 -->
-    //                 </select>
-    //             </td>
-    //             <td></td>
-    //             <td><input type="text" class="layui-input" placeholder="请输入主键字段值，用逗号分隔"></td>
-    //             <td>
-    //                 <select class="layui-input">
-    //                     <option value="">请选择</option>
-    //                     <option value="dict_id">dict_id</option>
-    //                     <option value="key_words">key_words</option>
-    //                     <option value="vendor">vendor</option>
-    //                     <option value="account">account</option>
-    //                 </select>
-    //             </td>
-    //             <td><input type="checkbox" checked></td>
-    //         </tr>
-    //     </tbody>
-    // `;
-    //
-    //     // 在创建新表格后填充表名数据
-    //     fetchTableNames(); // 调用获取表名的函数
-    //
-    //     // 获取表名数据并填充下拉框
-    //     function fetchTableNames() {
-    //         fetch('DB/tableName') // 接口路径
-    //             .then(response => response.json())
-    //             .then(data => {
-    //                 if (data.code === 200) {
-    //                     const tableSelect = newTable.querySelector('#tableSelect'); // 获取新表格中的下拉框
-    //                     // 清空现有选项
-    //                     tableSelect.innerHTML = '<option value="">请选择</option>';
-    //                     // 遍历 data 中的 tableName 并添加到下拉框
-    //                     data.data.forEach(item => {
-    //                         const option = document.createElement('option');
-    //                         option.value = item.tableName;
-    //                         option.textContent = item.tableName;
-    //                         tableSelect.appendChild(option);
-    //                     });
-    //                 } else {
-    //                     console.error('获取表名失败:', data.message);
-    //                 }
-    //             })
-    //             .catch(error => console.error('请求错误:', error));
-    //     }
-    //
-    //     // 创建一个包裹新表格的容器，用来设置上下间距
-    //     const newTableContainer = document.createElement('div');
-    //     newTableContainer.style.marginTop = '20px'; // 上间距
-    //     newTableContainer.style.marginBottom = '20px'; // 下间距
-    //
-    //     // 将新表格添加到新的容器中
-    //     newTableContainer.appendChild(newTable);
-    //
-    //     // 将新容器添加到表单中
-    //     tableContainer.appendChild(newTableContainer);
-    // });
+    // 数据传输函数
+    function transmitData(tableName) {
+        // 构建请求以获取保存的 tablejson 数据
+        const url = new URL('TransmitSaveOrEdit/list', window.location.origin);
+        url.searchParams.append('tableName', tableName);
 
-    document.getElementById('nextTableButton').addEventListener('click', function() {
-        // 提交当前表单数据
-        submitData(); // 调用提交数据的函数
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                // 检查返回的数据是否符合预期
+                if (data && data.code === 200 && Array.isArray(data.data)) {
+                    // 根据 tableName 定位到具体的记录
+                    const record = data.data.find(item => item.tableName === tableName);
 
-        // 提交成功后刷新页面
-        setTimeout(() => {
-            location.reload(); // 刷新页面
-        }, 2000); // 等待1秒以确保提交完成
+                    if (record && record.tablejson) {
+                        try {
+                            // 解析 tablejson 字符串
+                            const tablejson = JSON.parse(record.tablejson);
+
+                            // 将 tablejson 数据发送到 DBTransmit/listTransmit 接口
+                            fetch('DBTransmit/listTransmit', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(tablejson)
+                            })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data && data.code === 200) {
+                                        alert('数据传输成功');
+                                    } else {
+                                        alert('数据传输失败: ' + (data.message || '未知错误'));
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('数据传输失败:', error);
+                                    alert('数据传输过程中出错');
+                                });
+                        } catch (error) {
+                            console.error('解析 tablejson 数据失败:', error);
+                            alert('保存的配置信息格式错误，无法解析');
+                        }
+                    } else {
+                        console.error('未找到匹配的表名或 tablejson 数据:', data);
+                        alert('未找到匹配的表名或保存的配置信息');
+                    }
+                } else {
+                    console.error('返回的数据格式错误:', data);
+                    alert('返回的数据格式错误');
+                }
+            })
+            .catch(error => {
+                console.error('获取保存的配置信息失败:', error);
+                alert('获取保存的配置信息过程中出错');
+            });
+
+    }
+
+
+
+    function fetchSavedTableJson(tableName) {
+        return new Promise((resolve, reject) => {
+            const url = new URL('TransmitSaveOrEdit/list', window.location.origin);
+            url.searchParams.append('tableName', tableName);
+
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.code === 200 && Array.isArray(data.data)) {
+                        const record = data.data.find(item => item.tableName === tableName);
+                        if (record && record.tablejson) {
+                            try {
+                                // 尝试解析 tablejson 数据
+                                const tablejson = JSON.parse(record.tablejson);
+                                resolve(tablejson); // 成功解析，返回 JSON 数据
+                            } catch (error) {
+                                // 如果返回的内容是 "未配置"，直接返回 null
+                                if (record.tablejson === "未配置") {
+                                    console.warn(`表 ${tableName} 的 tablejson 数据未配置，跳过`);
+                                    resolve(null); // 未配置时返回 null
+                                } else {
+                                    console.error(`解析 tablejson 数据失败，表名: ${tableName}`, error);
+                                    reject(new Error(`表 ${tableName} 的 tablejson 数据格式错误`)); // 其他错误情况
+                                }
+                            }
+                        } else {
+                            console.warn(`未找到匹配的表名或 tablejson 数据: ${tableName}`);
+                            resolve(null); // 数据不存在时返回 null
+                        }
+                    } else {
+                        console.error(`返回的数据格式错误: ${tableName}`, data);
+                        resolve(null); // 数据格式错误时返回 null
+                    }
+                })
+                .catch(error => {
+                    console.error(`获取保存的配置信息失败: ${tableName}`, error);
+                    resolve(null); // 获取失败时返回 null
+                });
+        });
+    }
+
+    // 为“批量传输”按钮添加事件监听器
+    document.getElementById('submitButton').addEventListener('click', function() {
+        batchTransmitData();
     });
 
+    // 批量传输数据的函数
+    function batchTransmitData() {
+        const allTableNames = []; // 存储所有表名
+        const tableRows = document.querySelectorAll('#tableBody tr');
+        tableRows.forEach(row => {
+            const tableNameCell = row.querySelector('td:nth-child(2)');
+            if (tableNameCell) {
+                allTableNames.push(tableNameCell.textContent);
+            }
+        });
 
+        if (allTableNames.length === 0) {
+            alert('没有找到任何表名，无法进行批量传输');
+            return;
+        }
 
-    // 绑定提交按钮事件
-    document.getElementById('submitButton').addEventListener('click', submitData);
+        // 获取每个表的 tablejson 数据
+        const promises = allTableNames.map(tableName => fetchSavedTableJson(tableName));
+
+        Promise.all(promises)
+            .then(allTableJsons => {
+                // 过滤掉无效或未配置的数据
+                const validTableJsons = allTableJsons.filter(json => json !== null && json !== undefined);
+                if (validTableJsons.length === 0) {
+                    alert('没有找到任何有效的配置信息，无法进行批量传输');
+                    return;
+                }
+
+                // 发送汇总的 JSON 数据到批量传输接口
+                return fetch('DBTransmit/listsTransmit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(validTableJsons)
+                });
+            })
+            .then(response => response.json())
+            .then(batchTransmitResponse => {
+                if (batchTransmitResponse && batchTransmitResponse.code === 200) {
+                    alert('批量数据传输成功');
+                } else {
+                    alert('批量数据传输失败: ' + (batchTransmitResponse.message || '未知错误'));
+                }
+            })
+            .catch(error => {
+                console.error('批量传输过程中出错:', error);
+                alert('批量传输过程中出错');
+            });
+    }
+
 
 </script>
 </body>
