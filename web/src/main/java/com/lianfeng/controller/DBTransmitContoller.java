@@ -8,6 +8,7 @@ import com.lianfeng.common.response.R;
 import com.lianfeng.common.utils.JsonUtiles;
 import com.lianfeng.model.entity.DbSaveoreditinfoTable;
 import com.lianfeng.po.DBTransmitPo;
+import com.lianfeng.po.DbSaveOrNamePo;
 import com.lianfeng.service.IDbSaveoreditinfoTableService;
 import com.lianfeng.service.IDBTransmitService;
 import com.lianfeng.vo.DBTransmitVo;
@@ -129,6 +130,21 @@ public class DBTransmitContoller {
             listTransmit(dbTransmitVo);
         }
         return R.success("传输成功");
+    }
+
+    @ApiOperation(
+            value = "数据库传输接口",
+            notes = "批量指定某个数据或某个字段上传数据库",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @PostMapping("listsTransmit")
+    public R<List<DBTransmitPo>> listTransmit(@RequestBody List<DBTransmitVo> list) throws SQLException {
+        List<DBTransmitPo> dbTransmitPos = new ArrayList<>();
+        for (DBTransmitVo dbTransmitVo : list) {
+            R<DBTransmitPo> dbTransmitPoR = listTransmit(dbTransmitVo);
+        }
+        return R.data(dbTransmitPos);
     }
 
 }
