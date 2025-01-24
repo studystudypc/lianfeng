@@ -48,7 +48,9 @@ public enum ResponseCode {
     DATABASE_TABLE_NOT_EXIST(102, "数据库表不存在"),
     FIELD_COUNT_MISMATCH(103, "源表和目标表的字段数量不一致"),
     TABLE_STRUCTURE_DIFFERENT(104, "表结构不相同"),
-    LOG_FILE_DIRECTORY_CREATION_FAILED(104, "无法创建日志文件目录");
+    LOG_FILE_DIRECTORY_CREATION_FAILED(104, "无法创建日志文件目录"),
+    SQL_RUN_ERROR(105, "sql执行失败"),
+    SELECT_TABLE_NAME(106, "查询表名失败");
 
     /**
      * 状态码
