@@ -3,6 +3,7 @@ package com.lianfeng.service;
 import com.lianfeng.common.response.R;
 import com.lianfeng.po.ConformSQLPo;
 import com.lianfeng.vo.ConditionVo;
+import com.lianfeng.vo.ConditionsVO;
 import com.lianfeng.vo.DBNameVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -47,4 +48,20 @@ public interface IDBTransmitConditionService {
     List<String> splicingSQL(List<Map<String, List<Map<String, String>>>> queryField);
 
     void transmitSQL(List<String> sqls);
+
+    /**
+     * 根据条件查找出来符合条件的值
+     * @param conditionsVO
+     * @return
+     */
+    List<Map<String, String>> queryConditions(ConditionsVO conditionsVO);
+
+    /**
+     * 拼接sql
+     * @param selectSQl
+     * @return
+     */
+    String splicingsSQL(List<Map<String, String>> selectSQl,ConditionsVO conditionsVO);
+
+    void transmitsSQL(String sql);
 }

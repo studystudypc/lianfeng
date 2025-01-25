@@ -1,10 +1,10 @@
 package com.lianfeng.controller;
 
 import com.lianfeng.common.response.R;
-import com.lianfeng.po.ConformSQLPo;
 import com.lianfeng.service.IDBTransmitConditionService;
 import com.lianfeng.service.IDbConnectionInfoService;
 import com.lianfeng.vo.ConditionVo;
+import com.lianfeng.vo.ConditionsVO;
 import com.lianfeng.vo.DBNameVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.sound.sampled.Port;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -57,4 +56,18 @@ public class DBTransmitConditionContoller {
         return R.success();
     }
 
+
+    @ApiOperation(
+            value = "条件传输模块接口",
+            notes = "条件传输模块",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @PostMapping("transmitsCondition")
+    public R transmitsCondition(@RequestBody ConditionsVO conditionsVO) {
+        List<Map<String, String>> selectSQl = idbTransmitConditionService.queryConditions(conditionsVO);//根据表查询数据库中字段
+        String sql = idbTransmitConditionService.splicingsSQL(selectSQl, conditionsVO);//拼接sql
+        idbTransmitConditionService.transmitsSQL(sql);
+        return R.success();
+    }
 }

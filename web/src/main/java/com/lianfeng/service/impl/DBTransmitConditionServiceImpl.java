@@ -7,16 +7,16 @@ import com.lianfeng.model.entity.DbConnectionInfo;
 import com.lianfeng.po.ConformSQLPo;
 import com.lianfeng.service.IDBTransmitConditionService;
 import com.lianfeng.service.IDbConnectionInfoService;
+import com.lianfeng.vo.Condition;
 import com.lianfeng.vo.ConditionVo;
+import com.lianfeng.vo.ConditionsVO;
 import com.lianfeng.vo.DBNameVo;
-import com.sun.xml.bind.v2.TODO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.*;
 import java.util.*;
 
-import static com.baomidou.mybatisplus.extension.toolkit.Db.list;
 import static com.lianfeng.constans.DBConstants.*;
 
 /**
@@ -178,12 +178,133 @@ public class DBTransmitConditionServiceImpl implements IDBTransmitConditionServi
         } catch (SQLException e) {
 
         } finally {
+            JdbcUtil.release(connection, preparedStatement, resultSet);
+        }
+    }
+
+    /**
+     * 根据conditionsVO拼出查询的sql
+     * 把查询的结果集放到一个集合中
+     *
+     * @param conditionsVO
+     */
+    @Override
+    public List<Map<String, String>> queryConditions(ConditionsVO conditionsVO) {
+        List<Condition> conditionList = conditionsVO.getCondition();//查询条件
+
+        StringBuilder whereSQL = new StringBuilder();//where后面的语句
+        for (int i = 0; i < conditionList.size(); i++) {
+            if (i > 0) {
+                whereSQL.append(" AND ");
+            }
+            Condition condition = conditionList.get(i);
+            whereSQL.append("`" + condition.getField() + "`").append(condition.getOperator()).append("'" + condition.getValue() + "'");
+        }
+        String baseSQL = "SELECT * FROM " + conditionsVO.getTableName() + " WHERE " + whereSQL;
+
+        return executesQuery(baseSQL);//执行查询，并把查询结果封装到结果集中
+    }
+
+
+    /**
+     * 拼接sql语句
+     *
+     * @param selectSQl
+     * @return
+     */
+    @Override
+    public String splicingsSQL(List<Map<String, String>> selectSQl, ConditionsVO conditionsVO) {
+        Map<String, String> firstRecord = selectSQl.get(0);
+        List<String> fieldNames = new ArrayList<>(firstRecord.keySet());//把字段放到集合中
+        String fields = String.join(",", fieldNames);//字段拼接
+        String tableName = conditionsVO.getTableName();//表的名字
+        //上述通过第一条数据获取字段值
+
+        String baseSQL = "REPLACE INTO %s (%s) VALUES %s;";//拼接语句模板
+
+        StringBuilder valuesBuilder = new StringBuilder();//存放value的值
+
+        for (Map<String, String> record : selectSQl) {
+            List<String> values = new ArrayList<>();
+            for (String fieldName : fieldNames) {
+                String value = record.get(fieldName);//字段名字对应的字段值
+                if (value == null || value.isEmpty()) {
+                    values.add("NULL");
+                } else {
+                    values.add("'" + value.replace("'", "''") + "'");
+                }
+            }
+            String valueString = String.join(",", values);
+            valuesBuilder.append("(").append(valueString).append("),");
+        }
+        if (valuesBuilder.length() > 0) {
+            valuesBuilder.setLength(valuesBuilder.length() - 1);
+        }
+        String sql = String.format(baseSQL,tableName,fields,valuesBuilder);
+        return sql;
+    }
+
+
+
+
+    /*----------------------private--------------------------*/
+
+    /**
+     * 执行sql
+     *
+     * @param sql
+     */
+    @Override
+    public void transmitsSQL(String sql) {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        try {
+            connection = targerConnection();
+            preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
             JdbcUtil.release(connection,preparedStatement,resultSet);
         }
     }
 
+    /**
+     * 执行查询，并把查询结果封装到结果集中
+     *
+     * @param baseSQL
+     */
+    private List<Map<String, String>> executesQuery(String baseSQL) {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        List<Map<String, String>> result = new ArrayList<>();//结果集
+        try {
+            connection = sourceConnection();
+            preparedStatement = connection.prepareStatement(baseSQL);
+            resultSet = preparedStatement.executeQuery();
 
-    /*----------------------private--------------------------*/
+            ResultSetMetaData metaData = resultSet.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            while (resultSet.next()) {
+                Map<String, String> row = new HashMap<>();
+                for (int i = 1; i <= columnCount; i++) {
+                    String columnName = metaData.getColumnName(i);
+                    String columnValue = resultSet.getString(i);
+                    row.put(columnName, columnValue);
+                }
+                result.add(row);
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            JdbcUtil.release(connection, preparedStatement, resultSet);
+        }
+
+        return result;
+    }
 
     /**
      * 执行sql查询，如果sql执行报错，那就不执行
