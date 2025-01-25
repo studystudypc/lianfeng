@@ -108,4 +108,14 @@ public interface LFanConstants {
      */
     String NAME_XLSX = "xlsx";
 
+    /**
+     * 删除
+     */
+    String IS_DELETED = "1";
+
+    /**
+     * 未删除
+     */
+    String IS_NO_DELETED = "0";
+
 }

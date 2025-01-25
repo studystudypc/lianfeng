@@ -70,4 +70,6 @@ public class DBTransmitConditionContoller {
         idbTransmitConditionService.transmitsSQL(sql);
         return R.success();
     }
+
+
 }

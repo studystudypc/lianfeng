@@ -44,7 +44,7 @@ public class VariableDetails implements Serializable {
     /**
      * 逻辑删除标志，0表示未删除，1表示已删除
      */
-    private Date isDeleted;
+    private Integer isDeleted;
 
     /**
      * 创建时间

@@ -4,13 +4,12 @@ server:
 spring:
   datasource:
 #    sourceTableName:
-    url: jdbc:mysql://127.0.0.1:3306/lianfeng?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&allowMultiQueries=true
+#    url: jdbc:mysql://127.0.0.1:3306/lianfeng?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&allowMultiQueries=true
+#    username: root
+#    password: 123456
+    url: jdbc:mysql://120.46.93.249:3306/lianfeng?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=GMT%2b8
     username: root
-    password: 123456
-#    targetTableName:
-#      url: jdbc:mysql://127.0.0.1:3306/lianfeng?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&allowMultiQueries=true
-#      username: root
-#      password: 123456
+    password: Liuchuanping.1
     #指定数据库驱动
     driver-class-name: com.mysql.cj.jdbc.Driver
     #数据库类型
@@ -46,7 +45,7 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:
-      logic-delete-field: is_deleted # 全局逻辑删除的实体字段名(配置后可以忽略不配置步骤二)
+      logic-delete-field: isDeleted  # 全局逻辑删除的实体字段名(配置后可以忽略不配置步骤二)
       logic-delete-value: 1 # 逻辑已删除值(默认为 1)
       logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
 
