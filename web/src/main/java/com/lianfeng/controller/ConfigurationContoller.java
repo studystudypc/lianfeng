@@ -185,7 +185,7 @@ public class ConfigurationContoller {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     @PostMapping("runTransmits")
-    public R runTransmits(String ids) {
+    public R runTransmits(@RequestBody String ids) {
         LambdaQueryWrapper<TransmitConfiguration> trWrapper = new LambdaQueryWrapper<>();
         trWrapper.eq(TransmitConfiguration::getId,ids);
         List<TransmitConfiguration> list = iTransmitConfigurationService.list(trWrapper);
