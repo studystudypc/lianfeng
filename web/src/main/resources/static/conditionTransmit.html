@@ -110,8 +110,10 @@
             <thead>
             <tr>
                 <th>字段</th>
-                <th>条件</th>
-                <th>字段值</th>
+                <th>条件1</th>
+                <th>条件值1</th>
+                <th>条件2</th>
+                <th>条件值2</th>
             </tr>
             </thead>
             <tbody id="tableBodyId">
@@ -134,9 +136,6 @@
     const tableNameSelect = document.getElementById('tableName');
     const configTableBody = document.getElementById('configTable').getElementsByTagName('tbody')[0];
 
-
-
-
     // 获取表名下拉框选项
     fetch('DB/tableName')
         .then(response => response.json())
@@ -157,10 +156,8 @@
             console.error('获取表名错误:', error);
         });
 
-
-
     // 表名下拉框变化时获取字段
-    function fetchReField(tableNameSelect,tableBody) {
+    function fetchReField(tableNameSelect, tableBody) {
         tableNameSelect.addEventListener('change', () => {
             const selectedTableName = tableNameSelect.value;
 
@@ -199,8 +196,8 @@
                             fieldCell.appendChild(checkbox);
                             fieldCell.appendChild(document.createTextNode(field));
 
-                            const conditionCell = document.createElement('td');
-                            conditionCell.innerHTML = `
+                            const condition1Cell = document.createElement('td');
+                            condition1Cell.innerHTML = `
         <select>
             <option value="null" disabled selected>请选择条件</option>
             <option value="=">=</option>
@@ -211,12 +208,29 @@
         </select>
     `;
 
-                            const valueCell = document.createElement('td');
-                            valueCell.innerHTML = '<input type="text">';
+                            const value1Cell = document.createElement('td');
+                            value1Cell.innerHTML = '<input type="text">';
+
+                            const condition2Cell = document.createElement('td');
+                            condition2Cell.innerHTML = `
+        <select>
+            <option value="null" disabled selected>请选择条件</option>
+            <option value="=">=</option>
+            <option value=">">></option>
+            <option value="<"><</option>
+            <option value=">=">>=</option>
+            <option value="<="><=</option>
+        </select>
+    `;
+
+                            const value2Cell = document.createElement('td');
+                            value2Cell.innerHTML = '<input type="text">';
 
                             row.appendChild(fieldCell);
-                            row.appendChild(conditionCell);
-                            row.appendChild(valueCell);
+                            row.appendChild(condition1Cell);
+                            row.appendChild(value1Cell);
+                            row.appendChild(condition2Cell);
+                            row.appendChild(value2Cell);
 
                             tableBody.appendChild(row);
                         });
@@ -250,45 +264,39 @@
         }
     });
 
-
-
-
-    //保存弹窗配置信息
-    // 获取保存按钮
+    // 保存弹窗配置信息
     const saveBtn = document.getElementById('saveBtn');
     let configIdCounter = 1; // 全局序号计数器
 
-    // 保存按钮点击事件
     saveBtn.addEventListener('click', () => {
-        // 获取配置名
         const configName = document.getElementById('configName').value;
-        const selectedTable = tableNameSelect.value; // 获取选中的表名
-        // 获取字段条件和值
+        const selectedTable = tableNameSelect.value;
         const rows = configTableBody.getElementsByTagName('tr');
-        let variableDetails = null;
-
-        // 使用全局序号计数器生成 ID
-        const configId = configIdCounter++;
-
-
+        const variableDetailsArray = []; // 用于存储所有字段的variableDetails
 
         for (let i = 0; i < rows.length; i++) {
             const cells = rows[i].getElementsByTagName('td');
             const checkbox = cells[0].querySelector('input[type="checkbox"]');
             if (checkbox.checked) { // 只处理勾选的字段
-                const field = cells[0].textContent.trim().replace(/^[^\w]+/, ''); // 去掉字段名前的复选框文字
-                const condition = cells[1].querySelector('select').value;
-                const value = cells[2].querySelector('input').value.trim();
-                const formattedValue = value.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'); // 格式化为 YYYY-MM-DD
+                const field = cells[0].textContent.trim().replace(/^[^\w]+/, '');
+                const condition1 = cells[1].querySelector('select').value;
+                const value1 = cells[2].querySelector('input').value.trim();
+                const condition2 = cells[3].querySelector('select').value;
+                const value2 = cells[4].querySelector('input').value.trim();
+
+                const formattedValue1 = value1.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
+                const formattedValue2 = value2.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
 
                 // 构造 variableDetails 对象
-                variableDetails = {
-                    configVariableId: configId,
+                  variableDetails = {
+                    configVariableId: configIdCounter,
                     field,
-                    id: configId,
+                    id: configIdCounter,
                     isDeleted: 0,
-                    operator: condition,
-                    value: formattedValue
+                    operator: condition1,
+                    value: formattedValue1,
+                    operator: condition2,
+                    value: formattedValue2
                 };
             }
         }
@@ -297,19 +305,19 @@
         const sendData = {
             configVariable: {
                 description: `Variable Description for ${configName}`,
-                id: configId,
+                id: configIdCounter,
                 isDeleted: 0,
                 name: selectedTable,
-                transmitConfigurationId: configId
+                transmitConfigurationId: configIdCounter
             },
             transmitConfiguration: {
                 description: `Description for ${configName}`,
-                id: configId,
+                id: configIdCounter,
                 isActive: 0,
                 isDeleted: 0,
                 name: configName
             },
-            variableDetails // 直接使用对象
+            variableDetails
         };
         console.log(JSON.stringify(sendData));
 
@@ -322,7 +330,7 @@
             body: JSON.stringify(sendData)
         })
             .then(response => {
-                if (!response.ok) { // 检查响应状态码
+                if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 return response.json();
@@ -330,7 +338,6 @@
             .then(data => {
                 if (data.code === 200) {
                     console.log('保存成功:', data);
-                    // 关闭弹窗
                     modal.style.display = 'none';
                 } else {
                     console.error('保存失败');
@@ -339,111 +346,91 @@
             .catch(error => {
                 console.error('保存错误:', error);
             });
+
+        // 增加序号计数器
+        configIdCounter++;
     });
 
-
-
-
-    //在主界面显示配置名和操作
-    // 获取表格的tbody部分
+    // 在主界面显示配置名和操作
     const configListTbody = document.getElementById('configListTable').getElementsByTagName('tbody')[0];
     let configCount = 0; // 用于记录配置的序号
 
-
-    // 保存按钮点击事件
     saveBtn.addEventListener('click', () => {
-        // 获取配置名
         const configName = document.getElementById('configName').value;
-
-        // 获取表名
         const selectedTable = tableNameSelect.value;
-
-        // 获取字段条件和值
         const rows = configTableBody.getElementsByTagName('tr');
         const configData = [];
 
         for (let i = 0; i < rows.length; i++) {
             const cells = rows[i].getElementsByTagName('td');
             const field = cells[0].textContent.trim();
-            const condition = cells[1].querySelector('select').value;
-            const value = cells[2].querySelector('input').value.trim();
-            configData.push({ field, condition, value });
+            const condition1 = cells[1].querySelector('select').value;
+            const value1 = cells[2].querySelector('input').value.trim();
+            const condition2 = cells[3].querySelector('select').value;
+            const value2 = cells[4].querySelector('input').value.trim();
+            configData.push({ field, condition1, value1, condition2, value2 });
         }
 
-
-        // 在表格中添加新行
         const newRow = document.createElement('tr');
         newRow.innerHTML = `
-        <td>${++configCount}</td> <!-- 序号 -->
-        <td>${configName}</td> <!-- 配置名 -->
+        <td>${++configCount}</td>
+        <td>${configName}</td>
         <td>
             <button class="action-btn start-btn">启动</button>
             <button class="action-btn edit-btn">修改</button>
             <button class="action-btn delete-btn">删除</button>
-        </td> <!-- 操作按钮 -->
+        </td>
     `;
         configListTbody.appendChild(newRow);
 
-        // 为启动按钮添加点击事件监听器
         const startBtn = newRow.querySelector('.start-btn');
         startBtn.addEventListener('click', () => {
-            const configId = configCount; // 获取当前行的序号作为配置ID
-            runTransmit(configId); // 调用运行传输的函数
+            const configId = configCount;
+            runTransmit(configId);
         });
 
-        // 为修改按钮添加点击事件监听器
         const editBtn = newRow.querySelector('.edit-btn');
         editBtn.addEventListener('click', () => {
             modal.style.display = 'block';
         });
 
-        // 为删除按钮添加点击事件监听器
         const deleteBtn = newRow.querySelector('.delete-btn');
         deleteBtn.addEventListener('click', () => {
-            newRow.remove(); // 删除对应的行
-            const configId = configCount; // 获取当前行的序号作为配置ID
+            newRow.remove();
+            const configId = configCount;
             removeconfig(configId);
             configCount = 0;
-            renumberRows()
+            renumberRows();
         });
-        // 重新编号所有行的函数
+
         function renumberRows() {
-            const rows = document.querySelectorAll('.td');
+            const rows = document.querySelectorAll('#configListTable tbody tr');
             rows.forEach((row, index) => {
-                const newConfigId = configCount++; // 使用全局计数器重新编号
-                row.querySelector('.config-id').textContent = newConfigId; // 更新序号显示
-                row.dataset.configId = newConfigId; // 更新行的data属性
+                const newConfigId = index + 1;
+                row.querySelector('td:nth-child(1)').textContent = newConfigId;
             });
         }
 
-
-        // 清空弹窗中的配置名输入框
         document.getElementById('configName').value = '';
-
-        // 关闭弹窗
         modal.style.display = 'none';
     });
 
-
-    // 运行传输的函数
     function runTransmit(configId) {
-        // 确保configId是有效的
         if (configId == null || configId === undefined) {
             console.error('configId不能为空');
             alert('configId不能为空');
             return;
         }
 
-        // 发送数据到后端
         fetch('configuration/runTransmits', {
             method: 'POST',
             headers: {
-                'Content-Type': 'text/plain' // 发送纯文本
+                'Content-Type': 'text/plain'
             },
-            body: configId.toString() // 直接发送ids的值
+            body: configId.toString()
         })
             .then(response => {
-                if (!response.ok) { // 检查响应状态码
+                if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 return response.json();
@@ -463,49 +450,37 @@
             });
     }
 
-    // 删除配置的函数
     function removeconfig(configId) {
-        // 确保configId是有效的
         if (configId == null || configId === undefined) {
             console.error('configId不能为空');
             alert('configId不能为空');
             return;
         }
 
-        // 发送数据到后端
         fetch('configuration/removeConfiguration', {
             method: 'POST',
             headers: {
-                'Content-Type': 'text/plain' // 发送纯文本
+                'Content-Type': 'text/plain'
             },
-            body: configId.toString() // 直接发送ids的值
+            body: configId.toString()
         })
             .then(response => {
-                if (!response.ok) { // 检查响应状态码
+                if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 return response.json();
             })
             .then(data => {
                 if (data.code === 200) {
-
                     alert('已删除');
                 } else {
-
                     alert('删除失败');
                 }
             })
             .catch(error => {
-
                 alert('删除错误');
             });
     }
-
-
-
-
-
-
 </script>
 </body>
 </html>
