@@ -172,7 +172,9 @@ public class ConfigurationContoller {
     )
     @PostMapping("save")
     public R save(@RequestBody ConfigVariableVo configVariableVo) {
-        iVariableDetailsService.saveOrUpdate(configVariableVo.getVariableDetails());
+        for (VariableDetails variableDetail : configVariableVo.getVariableDetails()) {
+            iVariableDetailsService.saveOrUpdate(variableDetail);
+        }
         iConfigVariableService.saveOrUpdate(configVariableVo.getConfigVariable());
         iTransmitConfigurationService.saveOrUpdate(configVariableVo.getTransmitConfiguration());
         return R.success();
