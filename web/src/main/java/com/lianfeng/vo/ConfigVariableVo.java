@@ -7,6 +7,7 @@ import com.lianfeng.model.entity.VariableDetails;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * @version 1.8
@@ -21,7 +22,7 @@ public class ConfigVariableVo implements Serializable {
 
     TransmitConfiguration transmitConfiguration;
 
-    VariableDetails variableDetails;
+    List<VariableDetails> variableDetails;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

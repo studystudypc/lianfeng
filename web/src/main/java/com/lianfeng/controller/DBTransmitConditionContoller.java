@@ -1,6 +1,7 @@
 package com.lianfeng.controller;
 
 import com.lianfeng.common.response.R;
+import com.lianfeng.scheduler.TaskExecutor;
 import com.lianfeng.service.IDBTransmitConditionService;
 import com.lianfeng.service.IDbConnectionInfoService;
 import com.lianfeng.vo.ConditionVo;
@@ -10,8 +11,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.sql.SQLException;
@@ -32,12 +35,14 @@ public class DBTransmitConditionContoller {
     private IDBTransmitConditionService idbTransmitConditionService;
     @Autowired
     private IDbConnectionInfoService iDbConnectionInfoService;
+    @Autowired
+    private TaskExecutor taskExecutor;
 
-    /**
+   /* *//**
      * 1、查询数据表的内容
      * 2、根据表查询数据库中字段
      * 3、把对应表名的值传入拼成sql
-     */
+     *//*
     @ApiOperation(
             value = "条件传输模块接口",
             notes = "条件传输模块",
@@ -54,10 +59,9 @@ public class DBTransmitConditionContoller {
 
         idbTransmitConditionService.transmitSQL(sqls);//执行SQL
         return R.success();
-    }
+    }*/
 
-
-    @ApiOperation(
+ /*   @ApiOperation(
             value = "条件传输模块接口",
             notes = "条件传输模块",
             consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -68,6 +72,31 @@ public class DBTransmitConditionContoller {
         List<Map<String, String>> selectSQl = idbTransmitConditionService.queryConditions(conditionsVO);//根据表查询数据库中字段
         String sql = idbTransmitConditionService.splicingsSQL(selectSQl, conditionsVO);//拼接sql
         idbTransmitConditionService.transmitsSQL(sql);
+        return R.success();
+    }*/
+
+    @ApiOperation(
+            value = "条件传输模块接口",
+            notes = "条件传输模块",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @PostMapping("transmitsCondition")
+    public R transmitsCondition(@RequestBody ConditionsVO conditionsVO, @RequestParam(required = false) boolean immediate) {
+        Runnable task = () -> {
+            List<Map<String, String>> selectSQl = idbTransmitConditionService.queryConditions(conditionsVO); // 根据表查询数据库中字段
+            String sql = idbTransmitConditionService.splicingsSQL(selectSQl, conditionsVO); // 拼接 SQL
+            idbTransmitConditionService.transmitsSQL(sql); // 执行 SQL
+        };
+
+        if (immediate) {
+            // 提交普通任务
+            taskExecutor.submitTask(task);
+        } else {
+            // 立即执行任务
+            taskExecutor.executeImmediately(task);
+        }
+
         return R.success();
     }
 

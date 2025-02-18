@@ -1,13 +1,11 @@
 package com.lianfeng.controller;
 
-import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.lianfeng.common.response.R;
 import com.lianfeng.model.entity.ConfigVariable;
 import com.lianfeng.model.entity.TransmitConfiguration;
 import com.lianfeng.model.entity.VariableDetails;
 import com.lianfeng.service.IConfigVariableService;
-import com.lianfeng.service.IDBTransmitConditionService;
 import com.lianfeng.service.ITransmitConfigurationService;
 import com.lianfeng.service.IVariableDetailsService;
 import com.lianfeng.vo.Condition;
@@ -17,6 +15,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -45,6 +44,7 @@ public class ConfigurationContoller {
     private IVariableDetailsService iVariableDetailsService;
     @Autowired
     private DBTransmitConditionContoller dbTransmitConditionContoller;
+
 
     @ApiOperation(
             value = "用户配置展示",
@@ -172,7 +172,9 @@ public class ConfigurationContoller {
     )
     @PostMapping("save")
     public R save(@RequestBody ConfigVariableVo configVariableVo) {
-        iVariableDetailsService.saveOrUpdate(configVariableVo.getVariableDetails());
+        for (VariableDetails variableDetail : configVariableVo.getVariableDetails()) {
+            iVariableDetailsService.saveOrUpdate(variableDetail);
+        }
         iConfigVariableService.saveOrUpdate(configVariableVo.getConfigVariable());
         iTransmitConfigurationService.saveOrUpdate(configVariableVo.getTransmitConfiguration());
         return R.success();
@@ -185,7 +187,7 @@ public class ConfigurationContoller {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     @PostMapping("runTransmits")
-    public R runTransmits(@RequestBody String ids) {
+    public R runTransmits(@RequestBody String ids,@RequestParam(required = false) boolean immediate) {
         LambdaQueryWrapper<TransmitConfiguration> trWrapper = new LambdaQueryWrapper<>();
         trWrapper.eq(TransmitConfiguration::getId,ids);
         List<TransmitConfiguration> list = iTransmitConfigurationService.list(trWrapper);
@@ -210,10 +212,10 @@ public class ConfigurationContoller {
             }
             conditionsVO.setTableName(configVariable.getName());//添加表名到参数中
             conditionsVO.setCondition(condition);//添加表名到参数中
-            dbTransmitConditionContoller.transmitsCondition(conditionsVO);
+            dbTransmitConditionContoller.transmitsCondition(conditionsVO,immediate);
+//            dbTransmitConditionContoller.transmitsCondition(conditionsVO);
             System.out.println(conditionsVO);
         }
-
         return R.success();
     }
 }
