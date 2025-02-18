@@ -267,6 +267,7 @@
     // 保存弹窗配置信息
     const saveBtn = document.getElementById('saveBtn');
     let configIdCounter = 1; // 全局序号计数器
+    let variableDetails = [];
 
     saveBtn.addEventListener('click', () => {
         const configName = document.getElementById('configName').value;
@@ -288,16 +289,33 @@
                 const formattedValue2 = value2.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
 
                 // 构造 variableDetails 对象
-                  variableDetails = {
-                    configVariableId: configIdCounter,
-                    field,
-                    id: configIdCounter,
-                    isDeleted: 0,
-                    operator: condition1,
-                    value: formattedValue1,
-                    operator: condition2,
-                    value: formattedValue2
-                };
+                //   variableDetails = {
+                //     configVariableId: configIdCounter,
+                //     field,
+                //     id: configIdCounter,
+                //     isDeleted: 0,
+                //     operator: condition1,
+                //     value: formattedValue1,
+                //     operator: condition2,
+                //     value: formattedValue2
+                // };
+
+
+                 variableDetails.push({
+                         configVariableId: configIdCounter,
+                         field,
+                         isDeleted: 0,
+                         operator: condition1,
+                         value: formattedValue1
+                     },
+                     {
+                         configVariableId: configIdCounter,
+                         field,
+                         isDeleted: 0,
+                         operator: condition2,
+                         value: formattedValue2
+                     });
+
             }
         }
 
@@ -317,7 +335,7 @@
                 isDeleted: 0,
                 name: configName
             },
-            variableDetails
+             variableDetails //使用数组
         };
         console.log(JSON.stringify(sendData));
 
