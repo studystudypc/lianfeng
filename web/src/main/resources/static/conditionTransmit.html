@@ -62,7 +62,7 @@
             margin-top: 20px; /* 与上文的间距 */
         }
         #addConfigBtn:hover {
-            background-color: #45a049; /* 鼠标悬停时的背景颜色 */
+            background-color: #45a049;/* 鼠标悬停时的背景颜色 */
         }
         .form-group {
             display: inline-block;
@@ -86,6 +86,8 @@
             <th>序号</th>
             <th>配置名</th>
             <th>操作</th>
+            <th style="display: none">immediate</th>
+            <th style="display: none">ids</th>
         </tr>
         </thead>
         <tbody></tbody>
@@ -125,13 +127,36 @@
         <span class="close">&times;</span>
 <!--        <div class="form-group">-->
 <!--        </div>-->
-        <div class="form-group">
-            <label for="tableName">表名：</label>
-            <select id="tableName" name="tableName">
-                <option value="null" disabled selected>请选择表名</option>
-            </select>
-        </div>
+<!--        <div class="form-group">-->
+<!--            <label for="tableName">表名：</label>-->
+<!--            <select id="tableName" name="tableName">-->
+<!--                <option value="null" disabled selected>请选择表名</option>-->
+<!--            </select>-->
+<!--        </div>-->
         <table id="configTable">
+            <thead>
+            <tr>
+                <th>序号</th>
+                <th>表名</th>
+                <th>条件配置</th>
+            </tr>
+            </thead>
+            <tbody id="tableBodyId">
+
+            </tbody>
+        </table>
+<!--        <div style="text-align: center; margin-top: 20px;">-->
+<!--            <button id="saveBtn" style="font-size: 16px; padding: 10px 20px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer;">-->
+<!--                保存-->
+<!--            </button>-->
+<!--        </div>-->
+    </div>
+</div>
+
+<!--返回表字段弹窗-->
+<div id="reFieldmodal" class="modal">
+    <div class="modal-content">
+        <table id="reFeildTable">
             <thead>
             <tr>
                 <th>字段</th>
@@ -141,16 +166,20 @@
                 <th>条件值2</th>
             </tr>
             </thead>
-            <tbody id="tableBodyId">
+            <tbody id="reFieldBody">
 
             </tbody>
         </table>
         <div style="text-align: center; margin-top: 20px;">
-            <button id="saveBtn" style="font-size: 16px; padding: 10px 20px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                <button id="closeModalButton" style="font-size: 16px; padding: 10px 20px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                          关闭
+                </button>
+            <button id="saveBtn"  style="font-size: 16px; padding: 10px 20px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer;">
                 保存
             </button>
-        </div>
+            </div>
     </div>
+
 </div>
 
 <script>
@@ -163,243 +192,68 @@
     const tableNameSelect = document.getElementById('tableName');
     const configTableBody = document.getElementById('configTable').getElementsByTagName('tbody')[0];
 
-    // 获取表名下拉框选项
-    fetch('DB/tableName')
-        .then(response => response.json())
-        .then(data => {
-            if (data.code === 200 && data.message === "SUCCESS") {
-                data.data.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item.tableName;
-                    option.textContent = item.tableName;
-                    tableNameSelect.appendChild(option);
-                });
-                fetchReField(tableNameSelect, configTableBody); // 在表名加载完成后调用
-            } else {
-                console.error('获取表名失败:', data.message);
-            }
-        })
-        .catch(error => {
-            console.error('获取表名错误:', error);
-        });
 
-    // 表名下拉框变化时获取字段
-    function fetchReField(tableNameSelect, tableBody) {
-        tableNameSelect.addEventListener('change', () => {
-            const selectedTableName = tableNameSelect.value;
 
-            // 清空字段表格
-            tableBody.innerHTML = '';
+    //列出表名
+    function fetchTableNames() {
+        fetch('DB/tableName')  // 这是你的接口路径
+            .then(response => response.json())  // 返回的是JSON格式的数据
+            .then(data => {
+                console.log(data);  // 打印返回的数据，查看结构
 
-            // 调用接口获取字段（使用POST请求，但通过查询参数传递tableName）
-            fetch(`DBTransmit/reField?tableName=${encodeURIComponent(selectedTableName)}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
+                // 检查 data.data 是否存在并且是数组
+                if (data && Array.isArray(data.data)) {
+                    const tableBody = document.getElementById('tableBodyId');
+                    data.data.forEach((item, index) => {
+                        const row = document.createElement('tr');
+
+                        // 序号列
+                        const td1 = document.createElement('td');
+                        td1.textContent = index + 1;  // 序号从1开始
+                        row.appendChild(td1);
+
+                        // 表名列
+                        const td2 = document.createElement('td');
+                        td2.textContent = item.tableName;  // 填充表名
+                        row.appendChild(td2);
+
+                        // 传输设置列
+                        const td3 = document.createElement('td');
+                        const button3 = document.createElement('button');
+                        button3.textContent = '设置条件';
+                        td3.appendChild(button3);
+                        row.appendChild(td3);
+
+
+                        // 为 "设置主键/字段" 按钮添加点击事件
+                        button3.addEventListener('click', function() {
+                            openModal(item.tableName); // 传递表名以便在弹窗中显示
+                        });
+
+
+
+                        // 将生成的行添加到表格
+                        tableBody.appendChild(row);
+                    });
+                } else {
+                    console.error('返回的数据格式错误，data 不存在或不是数组');
                 }
             })
-                .then(response => {
-                    if (!response.ok) { // 检查响应状态码
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.code === 200 && data.message === "SUCCESS") {
-                        console.log('字段数组:', data.data.fieldName);
-
-                        if (data.data.fieldName.length === 0) {
-                            console.warn('字段数组为空');
-                            return;
-                        }
-
-                        // 遍历字段数组，填充到字段列
-                        data.data.fieldName.forEach(field => {
-                            const row = document.createElement('tr');
-                            const checkbox = document.createElement('input');
-                            checkbox.type = 'checkbox';
-
-                            const fieldCell = document.createElement('td');
-                            fieldCell.appendChild(checkbox);
-                            fieldCell.appendChild(document.createTextNode(field));
-
-                            const condition1Cell = document.createElement('td');
-                            condition1Cell.innerHTML = `
-        <select>
-            <option value="null" disabled selected>请选择条件</option>
-            <option value="=">=</option>
-            <option value=">">></option>
-            <option value="<"><</option>
-            <option value=">=">>=</option>
-            <option value="<="><=</option>
-        </select>
-    `;
-
-                            const value1Cell = document.createElement('td');
-                            value1Cell.innerHTML = '<input type="text">';
-
-                            const condition2Cell = document.createElement('td');
-                            condition2Cell.innerHTML = `
-        <select>
-            <option value="null" disabled selected>请选择条件</option>
-            <option value="=">=</option>
-            <option value=">">></option>
-            <option value="<"><</option>
-            <option value=">=">>=</option>
-            <option value="<="><=</option>
-        </select>
-    `;
-
-                            const value2Cell = document.createElement('td');
-                            value2Cell.innerHTML = '<input type="text">';
-
-                            row.appendChild(fieldCell);
-                            row.appendChild(condition1Cell);
-                            row.appendChild(value1Cell);
-                            row.appendChild(condition2Cell);
-                            row.appendChild(value2Cell);
-
-                            tableBody.appendChild(row);
-                        });
-                    } else {
-                        console.error('获取字段失败:', data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('获取字段错误:', error);
-                });
-        });
+            .catch(error => {
+                console.error('获取表名失败:', error);
+            });
     }
 
+   //填充某个表的所有字段
+    function openModal(tableName){
+        const reFieldBody=document.getElementById("reFieldBody");
+        reFieldBody.innerHTML = '';
 
-    // 点击新增配置按钮显示myModal
-    addConfigBtn2.addEventListener('click', () => {
-        tableModal.style.display = 'block';
-    });
-
-    // 点击新增表按钮显示Modal
-    addConfigBtn.addEventListener('click', () => {
-        modal.style.display = 'block';
-    });
-
-    // 点击新增配置按钮显示弹窗
-    addConfigBtn.addEventListener('click', () => {
-        // 清空输入框和表格
-        tableNameSelect.value = 'null';
-        configTableBody.innerHTML = '';
-        modal.style.display = 'block';
-    });
-
-    // 点击关闭按钮隐藏弹窗
-    closeBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
-
-    // 点击关闭按钮隐藏弹窗
-    closeBtn.addEventListener('click', () => {
-        tableModal.style.display = 'none';
-    });
-
-    // 点击弹窗外部区域关闭弹窗
-    window.addEventListener('click', (event) => {
-        if (event.target === modal) {
-            modal.style.display = 'none';
-            tableModal.style.display = 'none';
-        }
-    });
-
-    // 保存弹窗配置信息
-    const saveBtn = document.getElementById('saveBtn');
-    let configIdCounter = 1; // 全局序号计数器
-
-    saveBtn.addEventListener('click', () => {
-        const configName = document.getElementById('configName').value;
-        const selectedTable = tableNameSelect.value;
-        const rows = configTableBody.getElementsByTagName('tr');
-
-       let variableDetails = []; // 清空数组
-
-        for (let i = 0; i < rows.length; i++) {
-            const cells = rows[i].getElementsByTagName('td');
-            const checkbox = cells[0].querySelector('input[type="checkbox"]');
-            if (checkbox.checked) { // 只处理勾选的字段
-                const field = cells[0].querySelector('input[type="checkbox"]').nextSibling.nodeValue.trim();
-                const condition1 = cells[1].querySelector('select').value;
-                const value1 = cells[2].querySelector('input').value.trim();
-                const condition2 = cells[3].querySelector('select').value;
-                const value2 = cells[4].querySelector('input').value.trim();
-
-                if (condition1 === "null" || value1 === "") {
-                    console.warn("条件1或值1为空，跳过此字段");
-                    continue;
-                }
-
-                if (condition2 === "null" || value2 === "") {
-                    console.warn("条件2或值2为空，跳过此字段");
-                    continue;
-                }
-
-                const formattedValue1 = value1.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
-                const formattedValue2 = value2.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
-
-
-                if (condition1 !== "null" && value1 !== "") {
-                    variableDetails.push({
-                        id:configIdCounter,
-                        configVariableId: configIdCounter,
-                        field,
-                        isDeleted: 0,
-                        operator: condition1,
-                        value: formattedValue1
-                    });
-                }
-
-                if (condition2 !== "null" && value2 !== "") {
-                    variableDetails.push({
-                        id:configIdCounter,
-                        configVariableId: configIdCounter,
-                        field,
-                        isDeleted: 0,
-                        operator: condition2,
-                        value: formattedValue2
-                    });
-                }
-            }
-        }
-
-        if (variableDetails.length === 0) {
-            console.error("没有有效的字段配置");
-            alert("请至少配置一个有效的字段条件");
-            return;
-        }
-
-        // 构造发送到后端的数据
-        const sendData = {
-            configVariable: {
-                description: `Variable Description for ${configName}`,
-                id: configIdCounter,
-                isDeleted: 0,
-                name: selectedTable,
-                transmitConfigurationId: configIdCounter
-            },
-            transmitConfiguration: {
-                description: `Description for ${configName}`,
-                id: configIdCounter,
-                isActive: 0,
-                isDeleted: 0,
-                name: configName
-            },
-             variableDetails //使用数组
-        };
-        console.log(JSON.stringify(sendData));
-
-        // 发送数据到后端
-        fetch('configuration/save', {
+        fetch(`DBTransmit/reField?tableName=${encodeURIComponent(tableName)}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(sendData)
+            }
         })
             .then(response => {
                 if (!response.ok) {
@@ -408,45 +262,181 @@
                 return response.json();
             })
             .then(data => {
-                if (data.code === 200) {
-                    console.log('保存成功:', data);
-                    modal.style.display = 'none';
-                } else {
-                    console.error('保存失败');
-                }
-            })
-            .catch(error => {
-                console.error('保存错误:', error);
-            });
+                if (data.code === 200 && data.message === "SUCCESS") {
+                    console.log('字段数组:', data.data.fieldName);
 
-        // 增加序号计数器
-        configIdCounter++;
-    });
+                    if (data.data.fieldName.length === 0) {
+                        console.warn('字段数组为空');
+                        alert('该表没有字段信息');
+                        return;
+                    }
 
-    // 在主界面显示配置名和操作
-    const configListTbody = document.getElementById('configListTable').getElementsByTagName('tbody')[0];
-    let configCount = 0; // 用于记录配置的序号
+                    // 遍历字段数组，填充到字段列
+                    data.data.fieldName.forEach(field => {
+                        const row = document.createElement('tr');
 
-    saveBtn.addEventListener('click', () => {
-        const configName = document.getElementById('configName').value;
-        const selectedTable = tableNameSelect.value;
-        const rows = configTableBody.getElementsByTagName('tr');
-        const configData = [];
+                        const fieldCell = document.createElement('td');
+                        fieldCell.textContent = field;
+                        const checkbox=document.createElement("input");
+                        checkbox.type = "checkbox";
+                        fieldCell.appendChild(checkbox);
 
-        for (let i = 0; i < rows.length; i++) {
-            const cells = rows[i].getElementsByTagName('td');
-            const field = cells[0].textContent.trim();
-            const condition1 = cells[1].querySelector('select').value;
-            const value1 = cells[2].querySelector('input').value.trim();
-            const condition2 = cells[3].querySelector('select').value;
-            const value2 = cells[4].querySelector('input').value.trim();
-            configData.push({ field, condition1, value1, condition2, value2 });
-        }
+                        const condition1Cell = document.createElement('td');
+                        condition1Cell.innerHTML = `
+                    <select>
+                        <option value="null" disabled selected>请选择条件</option>
+                        <option value="=">=</option>
+                        <option value=">">></option>
+                        <option value="<"><</option>
+                        <option value=">=">>=</option>
+                        <option value="<="><=</option>
+                    </select>
+                `;
 
-        const newRow = document.createElement('tr');
-        newRow.innerHTML = `
+                        const value1Cell = document.createElement('td');
+                        value1Cell.innerHTML = '<input type="text">';
+
+                        const condition2Cell = document.createElement('td');
+                        condition2Cell.innerHTML = `
+                    <select>
+                        <option value="null" disabled selected>请选择条件</option>
+                        <option value="=">=</option>
+                        <option value=">">></option>
+                        <option value="<"><</option>
+                        <option value=">=">>=</option>
+                        <option value="<="><=</option>
+                    </select>
+                `;
+
+                        const value2Cell = document.createElement('td');
+                        value2Cell.innerHTML = '<input type="text">';
+
+                        row.appendChild(fieldCell);
+                        row.appendChild(condition1Cell);
+                        row.appendChild(value1Cell);
+                        row.appendChild(condition2Cell);
+                        row.appendChild(value2Cell);
+
+                        reFieldBody.appendChild(row);
+                    });
+
+                    // 显示弹窗
+                    const reFieldModal = document.getElementById('reFieldmodal');
+                    reFieldModal.style.display = 'block';
+
+                    // 在弹窗中保存按钮的点击事件中使用 tableName
+                    const saveBtn = document.getElementById('saveBtn');
+                    const configListTbody = document.getElementById('configListTable').getElementsByTagName('tbody')[0];
+                    let configCount = 0; // 用于记录配置的序号
+                    let configIdCounter = 1; // 全局序号计数器
+                    saveBtn.addEventListener('click', () => {
+                        const configName = document.getElementById('configName').value; // 获取配置名
+                        const rows = document.getElementById('reFieldBody').getElementsByTagName('tr');
+                        let variableDetails = []; // 用于存储字段配置信息
+
+                        // 遍历表格行，获取勾选的字段和条件
+                        for (let i = 0; i < rows.length; i++) {
+                            const cells = rows[i].getElementsByTagName('td');
+                            const checkbox = cells[0].querySelector('input[type="checkbox"]');
+                            if (checkbox.checked) { // 只处理勾选的字段
+                                const field = cells[0].textContent.trim(); // 字段名
+                                const condition1 = cells[1].querySelector('select').value; // 条件1
+                                const value1 = cells[2].querySelector('input').value.trim(); // 条件值1
+                                const condition2 = cells[3].querySelector('select').value; // 条件2
+                                const value2 = cells[4].querySelector('input').value.trim(); // 条件值2
+
+                                // 格式化日期（如果需要）
+                                const formattedValue1 = value1.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
+                                const formattedValue2 = value2.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
+
+                                // 添加字段配置到数组
+                                if (condition1 !== "null" && value1 !== "") {
+                                    variableDetails.push({
+                                        id:configIdCounter,
+                                        configVariableId: configIdCounter,
+                                        field,
+                                        operator: condition1,
+                                        value: formattedValue1
+                                    });
+                                }
+
+                                if (condition2 !== "null" && value2 !== "") {
+                                    variableDetails.push({
+                                        id:configIdCounter,
+                                        configVariableId: configIdCounter,
+                                        field,
+                                        operator: condition2,
+                                        value: formattedValue2
+                                    });
+                                }
+                            }
+                        }
+
+                        // 检查是否有有效的字段配置
+                        if (variableDetails.length === 0) {
+                            alert("请至少选择一个字段并配置条件");
+                            return;
+                        }
+
+                        // 构造发送到后端的数据
+                        const sendData = {
+                            configVariable: {
+                                description: `Variable Description for ${configName}`,
+                                id: configIdCounter,
+                                isDeleted: 0,
+                                name: tableName, // 直接使用当前表名
+                                transmitConfigurationId: configIdCounter
+                            },
+                            transmitConfiguration: {
+                                description: `Description for ${configName}`,
+                                id: configIdCounter,
+                                isActive: 0,
+                                isDeleted: 0,
+                                name: configName // 配置名
+                            },
+                            variableDetails // 使用数组
+                        };
+
+                        console.log("发送的数据：", sendData);
+
+                        // 发送数据到后端
+                        fetch('configuration/save', { // 替换为你的后端接口路径
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(sendData)
+                        })
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error(`HTTP error! status: ${response.status}`);
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                if (data.code === 200) {
+                                    alert("保存成功！");
+                                    // 关闭弹窗
+                                    reFieldModal.style.display = 'none';
+                                    const myModal = document.getElementById('myModal');
+                                    myModal.style.display = 'none';
+                                } else {
+                                    alert("保存失败：" + data.message);
+                                }
+                            })
+                            .catch(error => {
+                                console.error("保存错误：", error);
+                                alert("保存失败，请检查网络或联系管理员");
+                            });
+
+                        // 增加序号计数器
+                        configIdCounter++;
+                    });
+
+                    const newRow = document.createElement('tr');
+                    newRow.innerHTML = `
         <td>${++configCount}</td>
-        <td>${selectedTable}</td>
+        <td>${tableName}</td>
         <td>
             <button class="action-btn start-btn">启动</button>
             <button class="action-btn edit-btn">修改</button>
@@ -457,39 +447,107 @@
         <label><input type="checkbox" class="execute-order" value="normal">普通执行</label>
 </td>
     `;
-        configListTbody.appendChild(newRow);
+                    configListTbody.appendChild(newRow);
 
-        const startBtn = newRow.querySelector('.start-btn');
-        startBtn.addEventListener('click', () => {
-            const configId = configCount;
-            runTransmit(configId);
-        });
+                    const startBtn = newRow.querySelector('.start-btn');
+                    startBtn.addEventListener('click', () => {
+                        const configId = configCount;
+                        runTransmit(configId);
+                    });
+                    const editBtn = newRow.querySelector('.edit-btn');
+                    editBtn.addEventListener('click', () => {
+                        modal.style.display = 'block';
+                    });
 
-        const editBtn = newRow.querySelector('.edit-btn');
-        editBtn.addEventListener('click', () => {
-            modal.style.display = 'block';
-        });
+                    const deleteBtn = newRow.querySelector('.delete-btn');
+                    deleteBtn.addEventListener('click', () => {
+                        newRow.remove();
+                        const configId = configCount;
+                        removeconfig(configId);
+                        configCount = 0;
+                        renumberRows();
+                    });
 
-        const deleteBtn = newRow.querySelector('.delete-btn');
-        deleteBtn.addEventListener('click', () => {
-            newRow.remove();
-            const configId = configCount;
-            removeconfig(configId);
-            configCount = 0;
-            renumberRows();
-        });
-
-        function renumberRows() {
-        const rows = document.querySelectorAll('#configListTable1 tbody tr');
-        rows.forEach((row, index) => {
-            row.querySelector('td:nth-child(1)').textContent = index + 1; // 更新序号
-        });
+                    function renumberRows() {
+                        const rows = document.querySelectorAll('#configListTable1 tbody tr');
+                        rows.forEach((row, index) => {
+                            row.querySelector('td:nth-child(1)').textContent = index + 1; // 更新序号
+                        });
+                    }
+                } else {
+                    console.error('获取字段失败:', data.message);
+                    alert('获取字段失败');
+                }
+            })
+            .catch(error => {
+                console.error('获取字段错误:', error);
+                alert('获取字段错误');
+            });
     }
-
-        // document.getElementById('configName').value = '';
+    // 关闭弹窗
+    document.getElementById('closeModalButton').addEventListener('click', function() {
+        const modal = document.getElementById('reFieldmodal');
         modal.style.display = 'none';
     });
 
+
+    // 点击新增配置按钮显示myModal
+    addConfigBtn2.addEventListener('click', () => {
+        tableModal.style.display = 'block';
+    });
+
+    // 点击新增表按钮显示Modal
+    addConfigBtn.addEventListener('click', () => {
+        fetchTableNames()
+        modal.style.display = 'block';
+    });
+
+    // 点击新增配置按钮显示弹窗
+    addConfigBtn.addEventListener('click', () => {
+        // 清空输入框和表格
+        configTableBody.innerHTML = '';
+        modal.style.display = 'block';
+    });
+
+    // 点击关闭按钮隐藏弹窗
+    closeBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+        tableModal.style.display = 'none';
+    });
+
+
+
+    // 点击弹窗外部区域关闭弹窗
+    window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+            // tableModal.style.display = 'none';
+        }
+    });
+
+    // 在主界面显示配置名和操作
+
+    // saveBtn.addEventListener('click', () => {
+    //     const configName = document.getElementById('configName').value;
+    //     const selectedTable = tableNameSelect.value;
+    //     const rows = configTableBody.getElementsByTagName('tr');
+    //     const configData = [];
+    //
+    //     for (let i = 0; i < rows.length; i++) {
+    //         const cells = rows[i].getElementsByTagName('td');
+    //         const field = cells[0].textContent.trim();
+    //         const condition1 = cells[1].querySelector('select').value;
+    //         const value1 = cells[2].querySelector('input').value.trim();
+    //         const condition2 = cells[3].querySelector('select').value;
+    //         const value2 = cells[4].querySelector('input').value.trim();
+    //         configData.push({ field, condition1, value1, condition2, value2 });
+    //     }
+    //
+    //
+    //     // document.getElementById('configName').value = '';
+    //     modal.style.display = 'none';
+    // });
+//启动函数
     function runTransmit(configId) {
         if (configId == null || configId === undefined) {
             console.error('configId不能为空');
@@ -540,7 +598,7 @@
                 alert('运行错误');
             });
     }
-
+//删除函数
     function removeconfig(configId) {
         if (configId == null || configId === undefined) {
             console.error('configId不能为空');
@@ -575,18 +633,16 @@
     }
 
 
-
+    //保存到主界面
     const saveConfigBtn = document.getElementById('saveConfigBtn');
     saveConfigBtn.addEventListener('click', () => {
         const configName = document.getElementById('configName').value; // 获取配置名
-        const selectedTable = tableNameSelect.value; // 获取表名
 
         // 验证配置名是否为空
-        if (!configName || selectedTable === 'null') {
+        if (!configName === 'null') {
             alert("请填写配置名并选择表名");
             return;
         }
-
         // 在主界面的配置表中添加新行
         const configListTbody = document.getElementById('configListTable1').getElementsByTagName('tbody')[0];
         const rowCount = configListTbody.rows.length;
